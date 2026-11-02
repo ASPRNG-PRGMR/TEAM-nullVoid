@@ -1,0 +1,25 @@
+# --- firmware ---
+.pio/
+.pioenvs/
+.piolibdeps/
+.vscode/
+firmware/binary-bin-s3cam/include/secrets.h
+
+# --- python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.egg-info/
+
+# --- models and data ---
+host/models/
+data/captures/*
+!data/captures/.gitkeep
+data/dataset/
+data/telemetry.jsonl
+
+# --- os ---
+.DS_Store
+Thumbs.db

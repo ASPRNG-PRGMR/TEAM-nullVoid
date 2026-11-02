@@ -1,0 +1,367 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1400 950" width="1400" height="950" role="img" font-family="Be Vietnam, Montserrat, Segoe UI, Arial, Helvetica, sans-serif" aria-label="Cutaway architecture of the Binary Bin: a fixed top panel whose first third is a hinged load flap, a shuttle box open at the top and bottom that hangs from a single linear rail and travels over two bins, a sealed deck that acts as the shuttle floor, one servo drop hatch per bin, and a sealed service cavity under the load station.">
+  <defs>
+    <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#DED6C8"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#A3927C" stroke-width="2"/>
+    </pattern>
+    <marker id="arrOr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C95F16"/>
+    </marker>
+    <g id="wasteItem">
+      <polygon points="-14,-9 -2,-13 13,-6 10,8 -6,12 -15,3" fill="#D8C4A2" stroke="#8C7B60" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M-8,-5 L2,2 M4,-7 L7,3" stroke="#8C7B60" stroke-width="1" opacity=".7" fill="none"/>
+    </g>
+  </defs>
+
+  <rect width="1400" height="950" fill="#FFFDF8"/>
+
+  <text x="32" y="44" font-size="25" font-weight="800" fill="#C95F16" letter-spacing="0.5">BINARY BIN &#183; INTERNAL ARCHITECTURE &#183; v2 SHUTTLE</text>
+  <text x="32" y="70" font-size="13" fill="#514A43">Fixed top panel &#183; hinged load flap over the first third &#183; one travelling shuttle box &#183; one drop hatch per bin</text>
+  <line x1="32" y1="80" x2="1368" y2="80" stroke="#C9B9A8" stroke-width="1.5"/>
+
+  <!-- ============ FRONT CUTAWAY ============ -->
+  <rect x="32" y="92" width="790" height="736" rx="12" fill="#FFFDF8" stroke="#C9B9A8" stroke-width="1.5"/>
+  <text x="50" y="114" font-size="12" font-weight="800" fill="#C95F16" letter-spacing="1.4">FRONT CUTAWAY &#8212; FRONT WALL REMOVED</text>
+  <text x="804" y="818" font-size="10" fill="#8C8178" text-anchor="end">concept view &#8212; not to scale</text>
+
+  <!-- shell + sealed cavity + inner liner -->
+  <rect x="120" y="220" width="620" height="570" rx="14" fill="url(#hatch)" stroke="#6F6760" stroke-width="2.2"/>
+  <rect x="133" y="233" width="594" height="544" rx="8" fill="#E4F0EE" stroke="#79A8A3" stroke-width="1.4"/>
+  <path d="M178 233 L178 723 L682 723 L682 233" fill="none" stroke="#C7B79C" stroke-width="9"/>
+  <path d="M187 233 L187 714 L673 714 L673 233 Z" fill="#FBF8F1"/>
+  <path d="M187 233 L187 714 L673 714 L673 233" fill="none" stroke="#6F6760" stroke-width="1.6"/>
+  <rect x="170" y="790" width="72" height="16" rx="7" fill="#6F6760"/>
+  <rect x="618" y="790" width="72" height="16" rx="7" fill="#6F6760"/>
+
+  <!-- thirds guide lines -->
+  <g stroke="#C95F16" stroke-width="1" stroke-dasharray="3 5" opacity=".4">
+    <line x1="349" y1="240" x2="349" y2="750"/>
+    <line x1="511" y1="240" x2="511" y2="750"/>
+  </g>
+
+  <!-- thirds dimension strip, below the shell -->
+  <g stroke="#C95F16" stroke-width="1.2" opacity=".8">
+    <line x1="189" y1="750" x2="347" y2="750"/><line x1="189" y1="745" x2="189" y2="755"/><line x1="347" y1="745" x2="347" y2="755"/>
+    <line x1="351" y1="750" x2="509" y2="750"/><line x1="351" y1="745" x2="351" y2="755"/><line x1="509" y1="745" x2="509" y2="755"/>
+    <line x1="513" y1="750" x2="671" y2="750"/><line x1="513" y1="745" x2="513" y2="755"/><line x1="671" y1="745" x2="671" y2="755"/>
+  </g>
+  <g font-size="9.5" font-weight="800" fill="#C95F16" text-anchor="middle" letter-spacing="0.6">
+    <text x="268" y="770">1/3 &#183; LOAD STATION</text>
+    <text x="430" y="770">1/3 &#183; BIN 1 (DRY)</text>
+    <text x="592" y="770">1/3 &#183; BIN 2 (WET)</text>
+  </g>
+  <text x="430" y="803" font-size="9" fill="#8C8178" text-anchor="middle">the top panel is fixed &#8212; only the load third ever opens</text>
+
+  <!-- fixed top panel: thirds 2 and 3 never open -->
+  <rect x="349" y="226" width="324" height="14" rx="4" fill="#B5A892" stroke="#6F6760" stroke-width="2"/>
+  <text x="511" y="220" font-size="9.5" font-weight="700" fill="#514A43" text-anchor="middle">FIXED TOP PANEL &#8212; sealed, never opens</text>
+
+  <!-- load flap: closed ghost + open position -->
+  <rect x="187" y="226" width="162" height="14" rx="4" fill="none" stroke="#8C8178" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="268" y="237" font-size="8.5" fill="#8C8178" text-anchor="middle">flap closed position</text>
+  <g transform="rotate(-35 187 233)">
+    <rect x="187" y="226" width="162" height="14" rx="4" fill="#CFC5B2" stroke="#6F6760" stroke-width="2"/>
+    <rect x="193" y="229" width="150" height="3.5" rx="1.8" fill="#B5A892"/>
+  </g>
+  <circle cx="187" cy="233" r="6" fill="#FFFDF8" stroke="#6F6760" stroke-width="2"/>
+  <text x="152" y="250" font-size="9" fill="#514A43" text-anchor="middle">hinge</text>
+  <path d="M300 208 Q 280 176 254 158" fill="none" stroke="#C95F16" stroke-width="2.2" marker-end="url(#arrOr)"/>
+  <text x="330" y="166" font-size="10" font-weight="700" fill="#C95F16">flap lifts on approach</text>
+
+  <!-- proximity sensor on the outer face -->
+  <rect x="694" y="222" width="32" height="12" rx="3" fill="#0F766E"/>
+  <circle cx="702" cy="228" r="3" fill="#D5E8E6"/><circle cx="718" cy="228" r="3" fill="#D5E8E6"/>
+  <path d="M728 224 q 20 -12 32 -26" fill="none" stroke="#0F766E" stroke-width="1.4" stroke-dasharray="4 4"/>
+
+  <!-- linear rail spanning the full length -->
+  <rect x="192" y="250" width="476" height="9" rx="3" fill="#8C8178" stroke="#514A43" stroke-width="1.5"/>
+  <g stroke="#514A43" stroke-width="1" opacity=".5">
+    <line x1="340" y1="250" x2="340" y2="259"/><line x1="400" y1="250" x2="400" y2="259"/>
+    <line x1="460" y1="250" x2="460" y2="259"/><line x1="580" y1="250" x2="580" y2="259"/><line x1="640" y1="250" x2="640" y2="259"/>
+  </g>
+  <text x="470" y="247" font-size="9" fill="#514A43" text-anchor="middle">single linear rail + closed-loop belt &#8212; one axis, one motor</text>
+  <rect x="664" y="244" width="22" height="21" rx="3" fill="#2E2A26"/>
+  <circle cx="675" cy="254.5" r="5.5" fill="#6F6760" stroke="#B6AEA2" stroke-width="1.4"/>
+
+  <!-- carriage + hangers at LOAD -->
+  <rect x="238" y="242" width="64" height="20" rx="4" fill="#C95F16" stroke="#8F400B" stroke-width="1.8"/>
+  <rect x="246" y="262" width="10" height="28" fill="#8F400B"/>
+  <rect x="284" y="262" width="10" height="28" fill="#8F400B"/>
+
+  <!-- camera + flash on the back wall of the load bay -->
+  <rect x="300" y="260" width="46" height="20" rx="4" fill="#2E2A26" stroke="#171717" stroke-width="1.4"/>
+  <circle cx="316" cy="270" r="6.5" fill="#5B7A86" stroke="#D5E8E6" stroke-width="2"/>
+  <rect x="330" y="265" width="12" height="10" rx="2" fill="#F3C969" stroke="#B8902B" stroke-width="1.2"/>
+  <polygon points="316,278 214,352 330,352" fill="#C95F16" opacity=".12"/>
+  <path d="M316 278 L216 350 M316 278 L328 350" stroke="#C95F16" stroke-width="1.2" stroke-dasharray="5 5" opacity=".85" fill="none"/>
+  <text x="356" y="294" font-size="9.5" font-weight="700" fill="#514A43">ESP32-S3-CAM + flash,</text>
+  <text x="356" y="307" font-size="9.5" font-weight="700" fill="#514A43">on the BACK WALL,</text>
+  <text x="356" y="320" font-size="9.5" font-weight="700" fill="#514A43">looking into the shuttle</text>
+
+  <!-- IR break beam across the flap throat -->
+  <rect x="190" y="292" width="9" height="14" rx="2" fill="#B33A3A"/>
+  <rect x="344" y="292" width="9" height="14" rx="2" fill="#B33A3A"/>
+  <line x1="199" y1="299" x2="344" y2="299" stroke="#B33A3A" stroke-width="1.4" stroke-dasharray="6 4"/>
+
+  <!-- SHUTTLE BOX at LOAD (open top and bottom) -->
+  <rect x="208" y="290" width="124" height="86" fill="#CFE3E0" opacity=".55"/>
+  <rect x="200" y="290" width="9" height="88" rx="2" fill="#0F766E"/>
+  <rect x="331" y="290" width="9" height="88" rx="2" fill="#0F766E"/>
+  <path d="M200 290 L340 290" stroke="#0F766E" stroke-width="2.4" stroke-dasharray="7 5"/>
+  <path d="M200 378 L340 378" stroke="#0F766E" stroke-width="2.4" stroke-dasharray="7 5"/>
+  <text x="258" y="318" font-size="9" font-weight="800" fill="#0F5F58" text-anchor="middle">SHUTTLE BOX</text>
+  <text x="258" y="330" font-size="8.5" fill="#0F5F58" text-anchor="middle">open top &#183; open bottom</text>
+  <use xlink:href="#wasteItem" href="#wasteItem" x="266" y="358"/>
+  <rect x="198" y="374" width="13" height="5" rx="2.5" fill="#514A43"/>
+  <rect x="329" y="374" width="13" height="5" rx="2.5" fill="#514A43"/>
+
+  <!-- travel arrow -->
+  <path d="M350 346 L512 346" fill="none" stroke="#C95F16" stroke-width="2.6" marker-end="url(#arrOr)"/>
+  <text x="431" y="340" font-size="10.5" font-weight="700" fill="#C95F16" text-anchor="middle">shuttle travels to the chosen bin</text>
+
+  <!-- ghost shuttle docked over BIN 2 -->
+  <g opacity=".38">
+    <rect x="530" y="290" width="124" height="86" fill="#CFE3E0"/>
+    <rect x="522" y="290" width="9" height="88" rx="2" fill="#0F766E"/>
+    <rect x="653" y="290" width="9" height="88" rx="2" fill="#0F766E"/>
+    <path d="M522 290 L662 290 M522 378 L662 378" stroke="#0F766E" stroke-width="2.2" stroke-dasharray="7 5"/>
+    <rect x="560" y="242" width="64" height="20" rx="4" fill="#C95F16"/>
+    <rect x="568" y="262" width="10" height="28" fill="#8F400B"/>
+    <rect x="606" y="262" width="10" height="28" fill="#8F400B"/>
+  </g>
+  <text x="592" y="320" font-size="9" font-weight="800" fill="#0F5F58" text-anchor="middle" opacity=".8">docked over BIN 2</text>
+
+  <!-- SEALED DECK -->
+  <rect x="187" y="378" width="486" height="13" fill="#B6AEA2" stroke="#6F6760" stroke-width="1.4"/>
+
+  <!-- BIN 1 hatch: CLOSED -->
+  <rect x="362" y="377" width="140" height="15" rx="2" fill="#BFD2E6" stroke="#2F6FAE" stroke-width="2"/>
+  <text x="432" y="388" font-size="8.5" font-weight="800" fill="#1C4C7D" text-anchor="middle">HATCH 1 &#183; CLOSED</text>
+  <rect x="348" y="374" width="14" height="21" rx="3" fill="#2F6FAE"/>
+  <rect x="502" y="374" width="14" height="21" rx="3" fill="#2F6FAE"/>
+
+  <!-- BIN 2 hatch: OPEN, two leaves dropped inward -->
+  <rect x="524" y="377" width="140" height="15" rx="2" fill="none" stroke="#8C8178" stroke-width="1.2" stroke-dasharray="5 4"/>
+  <g transform="rotate(72 524 384)">
+    <rect x="524" y="377" width="70" height="14" rx="2" fill="#C3D8BA" stroke="#4A7C45" stroke-width="2"/>
+  </g>
+  <g transform="rotate(-72 664 384)">
+    <rect x="594" y="377" width="70" height="14" rx="2" fill="#C3D8BA" stroke="#4A7C45" stroke-width="2"/>
+  </g>
+  <circle cx="524" cy="384" r="4.5" fill="#FFFDF8" stroke="#4A7C45" stroke-width="1.8"/>
+  <circle cx="664" cy="384" r="4.5" fill="#FFFDF8" stroke="#4A7C45" stroke-width="1.8"/>
+  <rect x="510" y="374" width="14" height="21" rx="3" fill="#4A7C45"/>
+  <rect x="664" y="374" width="14" height="21" rx="3" fill="#4A7C45"/>
+  <text x="600" y="428" font-size="9" font-weight="700" fill="#C95F16" text-anchor="middle">hatch 2 drops open</text>
+  <use xlink:href="#wasteItem" href="#wasteItem" x="620" y="482"/>
+  <path d="M620 448 L620 462 M634 454 L634 466 M606 454 L606 466" stroke="#8C7B60" stroke-width="1.6" stroke-linecap="round" opacity=".8" fill="none"/>
+
+  <!-- ToF fill sensors under the deck -->
+  <rect x="402" y="394" width="22" height="12" rx="2" fill="#2E2A26"/>
+  <circle cx="413" cy="400" r="3" fill="#8FB3C9"/>
+  <line x1="413" y1="408" x2="413" y2="600" stroke="#2F6FAE" stroke-width="1.3" stroke-dasharray="5 5"/>
+  <rect x="556" y="394" width="22" height="12" rx="2" fill="#2E2A26"/>
+  <circle cx="567" cy="400" r="3" fill="#8FB3C9"/>
+  <line x1="567" y1="408" x2="567" y2="528" stroke="#4A7C45" stroke-width="1.3" stroke-dasharray="5 5"/>
+
+  <!-- divider walls below deck -->
+  <rect x="344" y="391" width="12" height="323" fill="url(#hatch)" stroke="#6F6760" stroke-width="1.4"/>
+  <rect x="506" y="391" width="12" height="323" fill="url(#hatch)" stroke="#6F6760" stroke-width="1.4"/>
+
+  <!-- BIN 1 liner (dry / recyclable) -->
+  <polygon points="362,708 362,612 392,602 422,616 452,604 480,614 500,604 500,708" fill="#BFD2E6" stroke="#2F6FAE" stroke-width="1.2"/>
+  <path d="M360 408 L360 702 Q360 710 368 710 L494 710 Q502 710 502 702 L502 408" fill="none" stroke="#2F6FAE" stroke-width="2.6"/>
+  <rect x="353" y="404" width="16" height="7" rx="3" fill="#2F6FAE"/>
+  <rect x="493" y="404" width="16" height="7" rx="3" fill="#2F6FAE"/>
+  <text x="431" y="650" font-size="12" font-weight="800" fill="#1C4C7D" text-anchor="middle">BIN 1</text>
+  <text x="431" y="666" font-size="11" font-weight="800" fill="#1C4C7D" text-anchor="middle">RECYCLABLE / DRY</text>
+  <text x="431" y="682" font-size="10" fill="#1C4C7D" text-anchor="middle">blue liner &#183; 42% full</text>
+
+  <!-- BIN 2 liner (wet / non-recyclable) -->
+  <polygon points="524,708 524,536 554,524 586,538 616,522 644,534 662,526 662,708" fill="#C3D8BA" stroke="#4A7C45" stroke-width="1.2"/>
+  <path d="M522 408 L522 702 Q522 710 530 710 L656 710 Q664 710 664 702 L664 408" fill="none" stroke="#4A7C45" stroke-width="2.6"/>
+  <rect x="515" y="404" width="16" height="7" rx="3" fill="#4A7C45"/>
+  <rect x="655" y="404" width="16" height="7" rx="3" fill="#4A7C45"/>
+  <text x="593" y="580" font-size="12" font-weight="800" fill="#2F5A2B" text-anchor="middle">BIN 2</text>
+  <text x="593" y="596" font-size="11" font-weight="800" fill="#2F5A2B" text-anchor="middle">NON-RECYCLABLE / WET</text>
+  <text x="593" y="612" font-size="10" fill="#2F5A2B" text-anchor="middle">green liner &#183; 68% full</text>
+
+  <!-- SEALED SERVICE CAVITY under the load station -->
+  <rect x="193" y="400" width="146" height="310" rx="6" fill="#E4F0EE" stroke="#0F766E" stroke-width="2"/>
+  <text x="266" y="420" font-size="9" font-weight="800" fill="#0F5F58" text-anchor="middle">SEALED SERVICE CAVITY</text>
+  <text x="266" y="432" font-size="8.5" fill="#0F5F58" text-anchor="middle">no waste path crosses it</text>
+  <g>
+    <rect x="203" y="442" width="126" height="30" rx="4" fill="#D5E8E6" stroke="#0F766E" stroke-width="1.5"/>
+    <rect x="203" y="480" width="126" height="30" rx="4" fill="#D5E8E6" stroke="#0F766E" stroke-width="1.5"/>
+    <rect x="203" y="518" width="126" height="30" rx="4" fill="#D5E8E6" stroke="#0F766E" stroke-width="1.5"/>
+    <rect x="203" y="556" width="126" height="30" rx="4" fill="#D5E8E6" stroke="#0F766E" stroke-width="1.5"/>
+    <rect x="203" y="594" width="126" height="30" rx="4" fill="#D5E8E6" stroke="#0F766E" stroke-width="1.5"/>
+    <rect x="203" y="632" width="126" height="30" rx="4" fill="#D5E8E6" stroke="#0F766E" stroke-width="1.5"/>
+  </g>
+  <g font-size="9" fill="#0F5F58" text-anchor="middle">
+    <text x="266" y="461">ESP32-S3 N16R8 &#183; Wi-Fi</text>
+    <text x="266" y="499">TMC2209 stepper driver</text>
+    <text x="266" y="537">servo rail (flap + 2 hatches)</text>
+    <text x="266" y="575">5 V / 12 V PSU</text>
+    <text x="266" y="613">USB-UART to laptop</text>
+    <text x="266" y="651">antenna</text>
+  </g>
+
+  <!-- home limit switch -->
+  <rect x="186" y="264" width="10" height="16" rx="2" fill="#B33A3A" stroke="#7A2626" stroke-width="1.2"/>
+
+  <!-- side service brackets -->
+  <rect x="137" y="300" width="38" height="34" rx="4" fill="#D5E8E6" stroke="#0F766E" stroke-width="1.6"/>
+  <rect x="689" y="300" width="38" height="34" rx="4" fill="#D5E8E6" stroke="#0F766E" stroke-width="1.6"/>
+
+  <!-- callout bubbles -->
+  <g font-size="11" font-weight="800" fill="#FFFDF8" text-anchor="middle">
+    <line x1="113" y1="560" x2="124" y2="560" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="104" cy="560" r="9.5" fill="#C95F16"/><text x="104" y="564">1</text>
+    <line x1="614" y1="222" x2="604" y2="230" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="622" cy="218" r="9.5" fill="#C95F16"/><text x="622" y="222">2</text>
+    <circle cx="186" cy="146" r="9.5" fill="#C95F16"/><text x="186" y="150">3</text>
+    <line x1="743" y1="224" x2="727" y2="228" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="752" cy="220" r="9.5" fill="#C95F16"/><text x="752" y="224">4</text>
+    <line x1="365" y1="266" x2="348" y2="268" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="374" cy="264" r="9.5" fill="#C95F16"/><text x="374" y="268">5</text>
+    <line x1="176" y1="294" x2="188" y2="297" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="167" cy="291" r="9.5" fill="#C95F16"/><text x="167" y="295">6</text>
+    <circle cx="258" cy="348" r="9.5" fill="#C95F16"/><text x="258" y="352">7</text>
+    <line x1="470" y1="237" x2="470" y2="250" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="470" cy="228" r="9.5" fill="#C95F16"/><text x="470" y="232">8</text>
+    <line x1="232" y1="272" x2="244" y2="263" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="224" cy="277" r="9.5" fill="#C95F16"/><text x="224" y="281">9</text>
+    <line x1="166" y1="272" x2="185" y2="272" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="157" cy="272" r="9.5" fill="#C95F16"/><text x="157" y="276">10</text>
+    <line x1="169" y1="384" x2="186" y2="384" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="160" cy="384" r="9.5" fill="#C95F16"/><text x="160" y="388">11</text>
+    <line x1="432" y1="368" x2="432" y2="377" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="432" cy="359" r="9.5" fill="#C95F16"/><text x="432" y="363">12</text>
+    <line x1="690" y1="400" x2="676" y2="392" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="698" cy="404" r="9.5" fill="#C95F16"/><text x="698" y="408">13</text>
+    <line x1="355" y1="364" x2="340" y2="375" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="362" cy="359" r="9.5" fill="#C95F16"/><text x="362" y="363">14</text>
+    <line x1="394" y1="400" x2="402" y2="400" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="385" cy="400" r="9.5" fill="#C95F16"/><text x="385" y="404">15</text>
+    <circle cx="378" cy="690" r="9.5" fill="#C95F16"/><text x="378" y="694">16</text>
+    <circle cx="512" cy="440" r="9.5" fill="#C95F16"/><text x="512" y="444">17</text>
+    <line x1="155" y1="610" x2="172" y2="608" stroke="#C95F16" stroke-width="1.4"/>
+    <circle cx="146" cy="612" r="9.5" fill="#C95F16"/><text x="146" y="616">18</text>
+  </g>
+
+  <!-- ============ PLAN VIEW ============ -->
+  <rect x="838" y="92" width="530" height="338" rx="12" fill="#FFFDF8" stroke="#C9B9A8" stroke-width="1.5"/>
+  <text x="856" y="114" font-size="12" font-weight="800" fill="#C95F16" letter-spacing="1.2">PLAN VIEW &#8212; FROM ABOVE, TOP PANEL REMOVED</text>
+  <text x="1105" y="134" font-size="9.5" font-weight="700" fill="#514A43" text-anchor="middle">BACK WALL &#8212; camera + rail anchor</text>
+
+  <rect x="900" y="140" width="410" height="200" rx="10" fill="url(#hatch)" stroke="#6F6760" stroke-width="2"/>
+  <rect x="910" y="150" width="390" height="180" rx="6" fill="#E4F0EE" stroke="#79A8A3" stroke-width="1.3"/>
+  <rect x="936" y="172" width="338" height="136" rx="3" fill="#C7B79C" stroke="#6F6760" stroke-width="1.2"/>
+  <rect x="943" y="179" width="324" height="122" fill="#FBF8F1" stroke="#6F6760" stroke-width="1.4"/>
+
+  <line x1="1051" y1="179" x2="1051" y2="301" stroke="#C95F16" stroke-width="1" stroke-dasharray="3 5" opacity=".6"/>
+  <line x1="1159" y1="179" x2="1159" y2="301" stroke="#C95F16" stroke-width="1" stroke-dasharray="3 5" opacity=".6"/>
+
+  <rect x="943" y="179" width="108" height="122" fill="#D5E8E6" opacity=".7"/>
+  <text x="997" y="296" font-size="8" font-weight="800" fill="#0F5F58" text-anchor="middle">service cavity below</text>
+
+  <rect x="1063" y="194" width="84" height="98" rx="3" fill="#BFD2E6" stroke="#2F6FAE" stroke-width="1.8"/>
+  <text x="1105" y="272" font-size="8.5" font-weight="800" fill="#1C4C7D" text-anchor="middle">BIN 1</text>
+  <text x="1105" y="284" font-size="8" font-weight="800" fill="#1C4C7D" text-anchor="middle">HATCH CLOSED</text>
+  <rect x="1171" y="194" width="84" height="98" rx="3" fill="#C3D8BA" stroke="#4A7C45" stroke-width="1.8" stroke-dasharray="6 4"/>
+  <text x="1213" y="272" font-size="8.5" font-weight="800" fill="#2F5A2B" text-anchor="middle">BIN 2</text>
+  <text x="1213" y="284" font-size="8" font-weight="800" fill="#2F5A2B" text-anchor="middle">HATCH OPEN</text>
+
+  <line x1="950" y1="216" x2="1260" y2="216" stroke="#8C8178" stroke-width="5"/>
+
+  <rect x="955" y="194" width="84" height="98" rx="3" fill="#CFE3E0" stroke="#0F766E" stroke-width="2"/>
+  <g transform="translate(997,258) scale(0.62)"><use xlink:href="#wasteItem" href="#wasteItem"/></g>
+  <text x="997" y="208" font-size="8" font-weight="800" fill="#0F5F58" text-anchor="middle">SHUTTLE</text>
+
+  <rect x="975" y="179" width="42" height="12" rx="3" fill="#2E2A26"/>
+  <circle cx="989" cy="185" r="4" fill="#5B7A86" stroke="#D5E8E6" stroke-width="1.4"/>
+  <rect x="999" y="181" width="12" height="8" rx="2" fill="#F3C969" stroke="#B8902B" stroke-width="1"/>
+
+  <path d="M1047 240 L1195 240" fill="none" stroke="#C95F16" stroke-width="2.4" marker-end="url(#arrOr)"/>
+  <rect x="1086" y="224" width="70" height="14" rx="3" fill="#FFFDF8" opacity=".92"/>
+  <text x="1121" y="234" font-size="9" font-weight="700" fill="#C95F16" text-anchor="middle">travel</text>
+  <text x="1105" y="324" font-size="9.5" font-weight="700" fill="#514A43" text-anchor="middle">FRONT &#8212; user side &#183; service hatch</text>
+
+  <text x="856" y="362" font-size="10" fill="#514A43">One moving axis replaces the twin sweep arms. The shuttle is the only part that travels, and the</text>
+  <text x="856" y="378" font-size="10" fill="#514A43">sealed deck underneath it is its floor, so nothing can fall until a hatch is commanded open.</text>
+  <text x="856" y="398" font-size="10" fill="#C95F16" font-weight="700">Interlock: a hatch may open only while the shuttle is docked over it and the carriage is idle.</text>
+  <text x="856" y="416" font-size="10" fill="#C95F16" font-weight="700">Only one hatch is ever energised, and the load flap stays shut for the whole travel cycle.</text>
+
+  <!-- ============ KEY ============ -->
+  <rect x="838" y="442" width="530" height="268" rx="12" fill="#F7F1E3" stroke="#C9B9A8" stroke-width="1.5"/>
+  <text x="856" y="466" font-size="12" font-weight="800" fill="#C95F16" letter-spacing="1.2">KEY</text>
+  <g fill="#C95F16">
+    <circle cx="864" cy="486" r="8"/><circle cx="864" cy="510" r="8"/><circle cx="864" cy="534" r="8"/><circle cx="864" cy="558" r="8"/><circle cx="864" cy="582" r="8"/><circle cx="864" cy="606" r="8"/><circle cx="864" cy="630" r="8"/><circle cx="864" cy="654" r="8"/><circle cx="864" cy="678" r="8"/>
+    <circle cx="1112" cy="486" r="8"/><circle cx="1112" cy="510" r="8"/><circle cx="1112" cy="534" r="8"/><circle cx="1112" cy="558" r="8"/><circle cx="1112" cy="582" r="8"/><circle cx="1112" cy="606" r="8"/><circle cx="1112" cy="630" r="8"/><circle cx="1112" cy="654" r="8"/><circle cx="1112" cy="678" r="8"/>
+  </g>
+  <g font-size="10" font-weight="800" fill="#FFFDF8" text-anchor="middle">
+    <text x="864" y="490">1</text><text x="864" y="514">2</text><text x="864" y="538">3</text><text x="864" y="562">4</text><text x="864" y="586">5</text><text x="864" y="610">6</text><text x="864" y="634">7</text><text x="864" y="658">8</text><text x="864" y="682">9</text>
+    <text x="1112" y="490">10</text><text x="1112" y="514">11</text><text x="1112" y="538">12</text><text x="1112" y="562">13</text><text x="1112" y="586">14</text><text x="1112" y="610">15</text><text x="1112" y="634">16</text><text x="1112" y="658">17</text><text x="1112" y="682">18</text>
+  </g>
+  <g font-size="10.5" fill="#2E2A26">
+    <text x="880" y="490">Outer shell &#8212; impact &amp; weather skin</text>
+    <text x="880" y="514">Fixed top panel &#8212; the other two thirds</text>
+    <text x="880" y="538">Hinged load flap + servo &#8212; the open 1/3</text>
+    <text x="880" y="562">Proximity sensor &#8212; wakes the bin</text>
+    <text x="880" y="586">ESP32-S3-CAM + onboard flash (back wall)</text>
+    <text x="880" y="610">IR break-beam &#8212; item entered the shuttle</text>
+    <text x="880" y="634">Shuttle box &#8212; open top and open bottom</text>
+    <text x="880" y="658">Linear rail + closed-loop belt</text>
+    <text x="880" y="682">Carriage + NEMA 17 stepper</text>
+    <text x="1128" y="490">Home limit switch at the LOAD station</text>
+    <text x="1128" y="514">Sealed deck &#8212; the shuttle&#8217;s floor</text>
+    <text x="1128" y="538">Drop hatch 1 + servo (dry, closed)</text>
+    <text x="1128" y="562">Drop hatch 2 + servo (wet, open)</text>
+    <text x="1128" y="586">Wiper seal around the shuttle rim</text>
+    <text x="1128" y="610">ToF fill sensor, one per bin</text>
+    <text x="1128" y="634">Removable liners &#8212; blue / green</text>
+    <text x="1128" y="658">Partition wall between the two bins</text>
+    <text x="1128" y="682">Inner liner &#8212; debris &amp; splash barrier</text>
+  </g>
+
+  <!-- ============ V1 STACK ============ -->
+  <rect x="838" y="722" width="530" height="206" rx="12" fill="#FFFDF8" stroke="#C9B9A8" stroke-width="1.5"/>
+  <text x="856" y="746" font-size="12" font-weight="800" fill="#C95F16" letter-spacing="1.2">v1 SENSING &amp; COMPUTE SPLIT</text>
+  <g font-size="9.8" fill="#2E2A26">
+    <text x="856" y="768" font-weight="800" fill="#0F766E">ON THE BIN &#8212; ESP32-S3 N16R8 (16 MB flash, 8 MB PSRAM)</text>
+    <text x="856" y="786">&#8226; OV2640/OV5640 + onboard flash LED &#8212; capture, JPEG-encode in PSRAM, never decode on-device</text>
+    <text x="856" y="804">&#8226; Motion: 1 stepper (carriage) + 3 servos (flap, hatch 1, hatch 2) + home switch + break-beam</text>
+    <text x="856" y="822">&#8226; Link: Wi-Fi HTTP POST is the default; the USB-UART framed link is the fallback and the console</text>
+    <text x="856" y="844" font-weight="800" fill="#0F766E">ON THE LAPTOP &#8212; v1 inference host</text>
+    <text x="856" y="862">&#8226; FastAPI /classify returns {label, bin, confidence, latency_ms} &#8212; MobileNetV3-Small backend</text>
+    <text x="856" y="880">&#8226; Every frame is archived for labelling, so the dataset builds itself while the rig is demoed</text>
+    <text x="856" y="902" font-weight="800" fill="#0F766E">v2 &#8212; MOVE INFERENCE TO THE EDGE</text>
+    <text x="856" y="920">&#8226; Same /classify contract, served by an INT8 ESP-DL / TFLite-Micro model in PSRAM. No host.</text>
+  </g>
+
+  <!-- ============ CYCLE STRIP ============ -->
+  <rect x="32" y="840" width="790" height="88" rx="12" fill="#F7F1E3" stroke="#C9B9A8" stroke-width="1.5"/>
+  <g fill="#C95F16">
+    <circle cx="54" cy="866" r="9.5"/><circle cx="208" cy="866" r="9.5"/><circle cx="362" cy="866" r="9.5"/><circle cx="516" cy="866" r="9.5"/><circle cx="670" cy="866" r="9.5"/>
+  </g>
+  <g font-size="11" font-weight="800" fill="#FFFDF8" text-anchor="middle">
+    <text x="54" y="870">1</text><text x="208" y="870">2</text><text x="362" y="870">3</text><text x="516" y="870">4</text><text x="670" y="870">5</text>
+  </g>
+  <g font-size="11" font-weight="800" fill="#C95F16">
+    <text x="70" y="870">APPROACH</text><text x="224" y="870">DROP</text><text x="378" y="870">IDENTIFY</text><text x="532" y="870">TRAVEL</text><text x="686" y="870">DUMP</text>
+  </g>
+  <g font-size="9.4" fill="#2E2A26">
+    <text x="44" y="892">Proximity wakes the bin;</text><text x="44" y="906">the 1/3 load flap lifts.</text>
+    <text x="198" y="892">Item lands in the shuttle;</text><text x="198" y="906">break-beam confirms, flap shuts.</text>
+    <text x="352" y="892">Flash fires, the frame goes to</text><text x="352" y="906">the laptop, verdict: BIN 1 or 2.</text>
+    <text x="506" y="892">The carriage drives the shuttle</text><text x="506" y="906">over the target bin and stops.</text>
+    <text x="660" y="892">That hatch opens, item falls,</text><text x="660" y="906">hatch shuts, shuttle re-homes.</text>
+  </g>
+  <g stroke="#C95F16" stroke-width="2" fill="none">
+    <path d="M178 866 L190 866" marker-end="url(#arrOr)"/>
+    <path d="M332 866 L344 866" marker-end="url(#arrOr)"/>
+    <path d="M486 866 L498 866" marker-end="url(#arrOr)"/>
+    <path d="M640 866 L652 866" marker-end="url(#arrOr)"/>
+  </g>
+</svg>

@@ -1,0 +1,13 @@
+# Core server. This alone runs the heuristic backend with no model download.
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pillow>=10.3
+numpy>=1.26
+
+# Vision backend. Install these for the MobileNetV3 classifier (the default
+# once present). CPU-only wheels are fine; a laptop does SVGA in ~25 ms.
+torch>=2.3
+torchvision>=0.18
+
+# USB-UART transport only.
+pyserial>=3.5
