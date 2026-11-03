@@ -26,6 +26,7 @@ cfg::Bin g_target = cfg::kBinNone;
 Verdict  g_verdict;
 uint32_t g_cycleStart = 0;
 bool     g_faultSwReleased = false;
+bool     g_consoleGo = false;  // this cycle was started from the console
 uint32_t g_counts[3] = {0, 0, 0};  // [0] unused, [1] bin1, [2] bin2
 uint32_t g_fallbacks = 0;
 
@@ -41,6 +42,21 @@ uint32_t elapsed() { return millis() - g_enteredAt; }
 
 bool personPresent() { return digitalRead(BB_PIN_PRESENCE) == LOW; }
 bool beamBroken()    { return digitalRead(BB_PIN_BREAKBEAM) == LOW; }
+
+// Bench trigger, for bring-up before the sensors exist. Consumes console
+// keystrokes but stops dead at 0xA5 - the first byte of a link frame - so the
+// UART link's own traffic is left untouched.
+bool consoleTriggered() {
+  if (!cfg::kSerialTrigger) return false;
+  bool go = false;
+  while (Serial.available() > 0) {
+    const int c = Serial.peek();
+    if (c == 0xA5) break;
+    Serial.read();
+    if (c == 'g' || c == 'G') go = true;
+  }
+  return go;
+}
 
 void reportCycle() {
   if (g_link == nullptr) return;
@@ -68,6 +84,7 @@ void abortToFault(const char* why) {
   motion::disableDriver();
   if (g_link != nullptr) g_link->log(why);
   g_faultSwReleased = false;
+  g_consoleGo = false;
   enter(State::kFault);
 }
 
@@ -115,7 +132,8 @@ void tick() {
       delay(cfg::kIdlePollMs);
       // The break-beam is the more reliable trigger of the two: someone can
       // post an item through without ever tripping the proximity sensor.
-      if (!personPresent() && !beamBroken()) break;
+      g_consoleGo = consoleTriggered();
+      if (!personPresent() && !beamBroken() && !g_consoleGo) break;
       g_cycleStart = millis();
       g_seq++;
       if (!motion::openFlap()) {
@@ -127,7 +145,7 @@ void tick() {
     }
 
     case State::kFlapOpen: {
-      if (beamBroken()) {
+      if (g_consoleGo || beamBroken()) {
         // Item on its way in. Hold the flap a moment so a second item in the
         // same handful is not guillotined by the closing lid.
         delay(cfg::kFlapHoldMs);
@@ -216,6 +234,7 @@ void tick() {
     }
 
     case State::kCooldown:
+      g_consoleGo = false;
       if (elapsed() > cfg::kCooldownMs) enter(State::kIdle);
       break;
 

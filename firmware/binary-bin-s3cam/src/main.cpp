@@ -72,4 +72,13 @@ void setup() {
   Serial.println("[main] ready");
 }
 
-void loop() { bb::sm::tick(); }
+void loop() {
+#if defined(BB_RUN_PIN_PROBE) && BB_RUN_PIN_PROBE
+  // The probe is a one-shot. setup() returned early, so the state machine was
+  // never started - ticking it here would drive STEP/DIR with no pinMode and
+  // spew "IO 41 is not set as GPIO" forever.
+  delay(1000);
+#else
+  bb::sm::tick();
+#endif
+}

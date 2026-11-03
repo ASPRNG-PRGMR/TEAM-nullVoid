@@ -32,6 +32,12 @@ class Settings:
     serial_port: str = os.environ.get("BB_SERIAL", "/dev/ttyACM0")
     serial_baud: int = int(os.environ.get("BB_BAUD", "921600"))
 
+    # Degrees counter-clockwise to rotate a frame before inference, when the
+    # camera module ends up mounted on its side in the load bay. Only the copy
+    # fed to the model is rotated; the archived JPEG stays as the sensor sent
+    # it. One of 0/90/180/270.
+    rotate_deg: int = int(os.environ.get("BB_ROTATE", "0"))
+
     # "auto" picks mobilenet if torch is importable, else heuristic.
     backend: str = os.environ.get("BB_BACKEND", "auto")
     checkpoint: Path | None = (

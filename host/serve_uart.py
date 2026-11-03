@@ -7,6 +7,7 @@ the venue's Wi-Fi is hostile - which, at a hackathon, it will be.
     python serve_uart.py                      # /dev/ttyACM0 at 921600
     BB_SERIAL=/dev/ttyUSB0 python serve_uart.py
     python serve_uart.py --list               # show candidate ports
+    python serve_uart.py --trigger 8          # bench: start a cycle every 8 s
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ import json
 import logging
 import sys
 import time
+from pathlib import Path
 
 import serial
 from serial.tools import list_ports
@@ -42,7 +44,9 @@ def show_ports() -> None:
 def handle(frame: proto.Frame, ser: serial.Serial, clf: Classifier) -> None:
     if frame.type == proto.TYPE_IMAGE:
         seq, jpeg = proto.split_image_payload(frame.payload)
-        result = clf.classify_jpeg(jpeg, seq=seq, device=SETTINGS.serial_port)
+        result = clf.classify_jpeg(
+            jpeg, seq=seq, device=Path(SETTINGS.serial_port).name
+        )
         reply = result.as_json()
         reply["seq"] = seq
         ser.write(proto.encode(proto.TYPE_VERDICT, json.dumps(reply).encode()))
@@ -82,6 +86,14 @@ def main() -> int:
     ap.add_argument("--port", default=SETTINGS.serial_port)
     ap.add_argument("--baud", type=int, default=SETTINGS.serial_baud)
     ap.add_argument("--list", action="store_true", help="list serial ports and exit")
+    ap.add_argument(
+        "--trigger",
+        type=float,
+        default=0.0,
+        metavar="SECONDS",
+        help="bench mode: send a 'g' this often to start a cycle, for when the "
+        "presence sensor and break-beam are not wired yet (0 = off)",
+    )
     args = ap.parse_args()
 
     if args.list:
@@ -96,7 +108,16 @@ def main() -> int:
             with serial.Serial(args.port, args.baud, timeout=0.05) as ser:
                 log.info("open %s @ %d, backend %s", args.port, args.baud, clf.backend.name)
                 ser.reset_input_buffer()
+                next_trigger = time.time() + args.trigger if args.trigger else None
                 while True:
+                    if next_trigger is not None and time.time() >= next_trigger:
+                        # A bare 'g' is the firmware's console trigger. Link
+                        # frames open with 0xA5, so this cannot be mistaken
+                        # for one in either direction.
+                        ser.write(b"g")
+                        ser.flush()
+                        log.info("trigger -> g")
+                        next_trigger = time.time() + args.trigger
                     chunk = ser.read(8192)
                     if chunk:
                         for frame in reader.feed(chunk):

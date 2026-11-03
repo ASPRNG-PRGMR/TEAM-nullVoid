@@ -161,7 +161,10 @@ bool home() {
   if (!runSteps(sweep, false, cfg::kHomingMmPerSec, cfg::kHomeTimeoutMs, true)) {
     return false;
   }
-  if (!homeSwitchPressed()) {
+  // In dry-run there is no carriage and usually no switch either, so the seek
+  // above returned immediately without anything tripping. Requiring the switch
+  // here would fault every dry-run boot, which defeats the point of the flag.
+  if (!cfg::kDryRun && !homeSwitchPressed()) {
     fault("home switch never closed");
     return false;
   }

@@ -1,9 +1,34 @@
 # Hardware
 
-## Board
+## The board on the bench (measured 2026-11-03)
+
+Everything in this section was read off the actual hardware, not a datasheet.
+
+| | |
+|---|---|
+| Chip | ESP32-S3 (QFN56) rev **v0.2**, dual core + LP, 240 MHz |
+| MAC | `44:1b:f6:c8:82:fc` |
+| Flash | **16 MB**, Macronix (`c2:2018`), eFuse says **quad** (4 data lines) |
+| PSRAM | **8 MB embedded, AP_3v3** — reports `8188 KB free of 8192 KB` |
+| Camera sensor | **OV3660** (PID `0x3660`) — *not* the OV2640 this doc first assumed |
+| Camera pin map | `BB_BOARD_PROFILE=1` (the shared reference map) — confirmed by the prober |
+| USB | **CH343 bridge** (`1a86:55d3`) on UART0, enumerates as `/dev/ttyACM0` |
+
+Two consequences worth spelling out, because both cost time to rediscover:
+
+**The USB port is a bridge, not the S3's native USB.** So `Serial` has to be
+the hardware UART: `ARDUINO_USB_CDC_ON_BOOT=0`. Build with it set to 1 and the
+board comes up, runs fine and prints absolutely nothing, because the console
+is going out of GPIO 19/20 to a connector that is not there. A board that
+presents native USB (`303a:1001`) wants the opposite.
+
+**The console runs at 921600**, which is `cfg::kUartBaud`, not the 115200 you
+might assume. Same wire carries the framed image link.
+
+## Board, in general
 
 **ESP32-S3-WROOM-1 N16R8** on a camera carrier: 16 MB QIO flash, 8 MB **OPI**
-PSRAM, OV2640 (or OV5640) module, onboard white flash LED.
+PSRAM, an OV2640/OV3660/OV5640 module, onboard white flash LED.
 
 The PSRAM is not optional. SVGA JPEG frame buffers live there; with
 `fb_count = 2` in internal RAM the camera driver will not initialise.
@@ -29,6 +54,8 @@ LED moves around too. Rather than guess, flash the prober once:
 ```bash
 cd firmware/binary-bin-s3cam
 pio run -e s3cam_probe -t upload && pio device monitor
+# or, with no PlatformIO installed:
+./tools/acli.sh flash probe && ./tools/acli.sh monitor
 ```
 
 It tries each known map, prints which one grabs a frame and the sensor PID,
@@ -38,7 +65,7 @@ lights the white LED, then set both values in `platformio.ini` /
 
 | Profile | Boards | XCLK / SIOD / SIOC | Flash LED |
 |---|---|---|---|
-| `BB_BOARD_GENERIC_S3CAM` | ESP32-CAM-shaped S3 clones | 15 / 4 / 5 | GPIO 48 |
+| `BB_BOARD_GENERIC_S3CAM` | ESP32-CAM-shaped S3 clones | 15 / 4 / 5 | GPIO 48 | ← **ours** |
 | `BB_BOARD_FREENOVE` | Freenove ESP32-S3-WROOM CAM | 15 / 4 / 5 | GPIO 2 |
 | `BB_BOARD_S3_EYE` | Espressif ESP32-S3-EYE | 15 / 4 / 5 | — |
 | `BB_BOARD_XIAO_SENSE` | Seeed XIAO ESP32S3 Sense | 10 / 40 / 39 | GPIO 21 |
@@ -118,3 +145,56 @@ usable — a closed bin has no ambient light, and a fixed LED at a fixed distanc
 means every training image and every inference image see the same lighting.
 Start at `kFlashDuty = 150` of 255; full brightness blows out clear PET and the
 specular highlight eats the label you are trying to read.
+
+## Building without PlatformIO
+
+PlatformIO is the documented path, but `tools/acli.sh` does the same job with
+`arduino-cli`, which is what the bench laptop actually has. It flattens
+`src/` + `include/` into a throwaway sketch and sets the board options to
+match `platformio.ini`.
+
+```bash
+cd firmware/binary-bin-s3cam
+./tools/acli.sh flash uart     # or: wifi, probe
+./tools/acli.sh monitor        # 921600
+```
+
+The FQBN it uses, spelled out, is:
+
+```
+esp32:esp32:esp32s3:USBMode=hwcdc,CDCOnBoot=default,FlashMode=qio,
+FlashSize=16M,PartitionScheme=app3M_fat9M_16MB,DebugLevel=info,
+PSRAM=opi,LoopCore=1
+```
+
+`CDCOnBoot=default` means *disabled*, which is the CH343 case above.
+
+## Bring-up state
+
+As of 2026-11-03 the board is on the bench with **nothing wired to it** — no
+stepper, no servos, no limit switch, no sensors. The firmware is set up to
+match that:
+
+- `cfg::kDryRun = true` — the state machine runs the whole cycle and the
+  motion layer updates its model of where the shuttle is, but never pulses
+  STEP. **Set it back to `false` once the stepper is wired.**
+- `cfg::kSerialTrigger = true` — a bare `g` on the console starts one cycle,
+  standing in for the presence sensor and break-beam. Link frames open with
+  `0xA5`, so console keystrokes and link traffic cannot be confused.
+  `host/serve_uart.py --trigger 8` sends that `g` on a timer for a demo loop.
+- Homing skips the limit-switch check while `kDryRun` is on; with a real
+  carriage it is enforced as before.
+
+What has actually been proven on this hardware: camera init, SVGA JPEG
+capture, UART framing, host inference, verdict return, telemetry, and the
+capture archive. What has not: anything that moves.
+
+## Camera orientation
+
+The frames this module produces come out rotated ~90° relative to the room.
+`set_vflip` handles the usual upside-down module but cannot fix a quarter
+turn, so either mount the sensor square in the load bay or set `BB_ROTATE`
+(0/90/180/270) on the host, which rotates the copy fed to the model and
+leaves the archived JPEG untouched. It is not cosmetic — the same frame
+classified at 0° and 90° came back `non_recyclable 0.57` and
+`recyclable 0.60`.

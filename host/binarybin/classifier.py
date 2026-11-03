@@ -251,6 +251,23 @@ def build_backend(kind: str | None = None, checkpoint: Path | None = None) -> Ba
     return HeuristicBackend()
 
 
+_SAFE_CHARS = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
+)
+
+
+def _safe_token(raw: str, limit: int = 40) -> str:
+    """Reduce an untrusted string to something safe inside a filename.
+
+    `device` reaches us from the wire - the X-Device-Id header over Wi-Fi, a
+    port name over serial - and gets interpolated straight into a path. A
+    value containing "/" silently broke archiving over UART, and one
+    containing ".." would have written outside capture_dir entirely.
+    """
+    cleaned = "".join(c if c in _SAFE_CHARS else "-" for c in str(raw)).strip("-.")
+    return cleaned[:limit] or "unknown"
+
+
 class Classifier:
     """Wraps a backend with decoding, the confidence floor and capture archiving."""
 
@@ -273,6 +290,9 @@ class Classifier:
                 backend=self.backend.name,
                 detail=str(exc),
             )
+
+        if SETTINGS.rotate_deg % 360:
+            img = img.rotate(SETTINGS.rotate_deg, expand=True)
 
         label, confidence, detail = self.backend.predict(img)
 
@@ -309,7 +329,7 @@ class Classifier:
             out.mkdir(parents=True, exist_ok=True)
             stamp = time.strftime("%H%M%S")
             name = (
-                f"{stamp}_{device}_{seq:06d}_{result.label}"
+                f"{stamp}_{_safe_token(device)}_{seq:06d}_{_safe_token(result.label)}"
                 f"_{int(result.confidence * 100):03d}.jpg"
             )
             (out / name).write_bytes(data)

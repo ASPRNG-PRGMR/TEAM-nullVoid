@@ -141,11 +141,19 @@ python tools/send_test_image.py some_photo.jpg
 ```bash
 cd firmware/binary-bin-s3cam
 pio run -e s3cam_probe -t upload && pio device monitor
+# no PlatformIO? same thing through arduino-cli:
+./tools/acli.sh flash probe && ./tools/acli.sh monitor
 ```
 
 It tries each known map, reports which one works and the sensor it found,
 then blinks every flash-LED candidate. Set `BB_BOARD_PROFILE` and
 `BB_PIN_FLASH_LED` from what you see, once.
+
+On the board we have, this came back **profile 1, sensor OV3660** — recorded
+along with the rest of the measured hardware in
+[docs/HARDWARE.md](docs/HARDWARE.md). Note that board talks through a **CH343
+bridge**, so `ARDUINO_USB_CDC_ON_BOOT` must be `0` and the console is at
+**921600**, not 115200.
 
 ### 3. Firmware
 
@@ -163,10 +171,18 @@ associate — which, on venue Wi-Fi, it eventually will not.
 
 ### 4. Before you power the motors
 
-Set `kDryRun = true` in `include/config.h`. The whole state machine runs,
-logs every transition and every verdict, and never energises a driver. Walk
-the cycle end to end on the bench first; then set the real geometry from
-`docs/MECHANISM.md` and turn it off.
+`kDryRun` in `include/config.h` is currently **`true`**, because nothing is
+wired to the board yet. The whole state machine runs, logs every transition
+and every verdict, and never energises a driver. Walk the cycle end to end on
+the bench first; then set the real geometry from `docs/MECHANISM.md` and turn
+it off.
+
+With no presence sensor or break-beam attached, a bare `g` on the console
+starts one cycle. For a hands-off demo loop:
+
+```bash
+python serve_uart.py --trigger 8     # sends that 'g' every 8 s
+```
 
 ## Training on your own bin
 
@@ -214,13 +230,18 @@ routing is auditable from either side.
 | | |
 |---|---|
 | Mechanism redesign (shuttle replaces twin arms) | done |
-| Camera stack on the ESP32-S3 | done |
-| Both transports | done |
-| Motion + interlocks + state machine | done |
-| Host inference + dataset capture | done |
+| Camera stack on the ESP32-S3 | done, **running on real hardware** |
+| Both transports | done; UART proven on hardware, Wi-Fi compiles only |
+| Motion + interlocks + state machine | done, **dry-run only — nothing wired yet** |
+| Host inference + dataset capture | done, **proven end to end** |
 | Fine-tuning pipeline | done |
 | Per-bin fill sensing | v1.5 |
 | **Inference on the edge** | **v2 — see [docs/ROADMAP.md](docs/ROADMAP.md)** |
+
+Proven on the bench on 2026-11-03: camera init, SVGA JPEG capture, UART
+framing, host inference, verdict return, telemetry and the capture archive —
+a full cycle, repeatedly, with real frames. Not yet proven: anything that
+moves. See [docs/HARDWARE.md](docs/HARDWARE.md#bring-up-state).
 
 ## Team
 

@@ -86,7 +86,12 @@ constexpr const char* kHttpPath    = "/classify";
 constexpr uint32_t kWifiConnectMs  = 20000;
 
 // ------------------------------------------------------------------ misc
-constexpr bool kDryRun = false;  // true = run the state machine, never move a motor
+constexpr bool kDryRun = true;   // true = run the state machine, never move a motor
+
+// Bench trigger. With no presence sensor or break-beam wired yet, a bare 'g'
+// typed on the console starts one cycle. Safe to leave on: a link frame opens
+// with 0xA5 0x5A, so console keystrokes and link traffic cannot be confused.
+constexpr bool kSerialTrigger = true;
 
 }  // namespace cfg
 }  // namespace bb
