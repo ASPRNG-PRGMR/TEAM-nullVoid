@@ -105,6 +105,10 @@ firmware/binary-bin-s3cam/      PlatformIO project for the ESP32-S3
 host/                           the v1 inference host
   serve_wifi.py                   FastAPI /classify + /telemetry
   serve_uart.py                   same classifier over pyserial
+  dashboard.py                    bench viewfinder + scoring, in a browser
+  showcase.py                     the same rig, dressed for the demo table
+  static/fonts/                   IBM Plex, self-hosted (OFL 1.1)
+  binarybin/bench.py              the live session both dashboards drive
   binarybin/classifier.py         three backends behind one interface
   binarybin/labels.py             ImageNet -> recyclable/non-recyclable
   binarybin/protocol.py           host half of the UART framing
@@ -202,12 +206,47 @@ objects. Each capture answers with a popup large enough to read from the
 bench: `OK — bin 1` in teal, `MISS — went to bin 2` in red, with what you
 said and what the model said underneath.
 
+This is the working screen — the one with the buttons and the key hints on
+them. Section 6 is the same rig dressed for an audience.
+
 Only one process can hold the serial port, so the dashboard *replaces*
 `serve_uart.py` and `tools/bench_test.py` while it runs. It scores and saves
 to the same place. It binds to localhost by default; the page can move the
 mechanism, so only pass `--host 0.0.0.0` on a network you trust.
 
-### 6. Testing with real objects, from the terminal
+### 6. The screen for the demo table
+
+```bash
+cd host && python showcase.py         # http://127.0.0.1:8081
+```
+
+The same rig and the same classifier as section 5, dressed to be read from
+three metres away: live feed, one enormous verdict card per item, and the
+numbers a judge asks for — items sorted, agreement with ground truth,
+inference time. The look is borrowed from BhuKavach, a sibling project: a
+drafting sheet rather than a dashboard. Fonts are self-hosted, so it survives
+the hall Wi-Fi being gone.
+
+Nothing on screen announces the controls — the demo should look like a
+machine deciding, not a person at a console:
+
+| key | does |
+|---|---|
+| `4` | this item is **recyclable** → capture, classify, score |
+| `6` | this item is **non-recyclable** → capture, classify, score |
+| `space` | classify without scoring, for something you can't label |
+| `0` | clear the tally between groups of judges |
+| `esc` | dismiss the verdict card early |
+
+`4` and `6` tell the *scoreboard* what the object really was. The verdict on
+screen is always the machine's own — the big word is read off the bin the
+classifier picked — so when it gets one wrong the card says MISS instead of
+quietly agreeing with the key you pressed. Judges ask, and a demo that can't
+be wrong isn't worth showing.
+
+Only one process can hold the serial port, so run this *or* `dashboard.py`.
+
+### 7. Testing with real objects, from the terminal
 
 `tools/bench_test.py` is the one to use. It asks what the object actually is
 before it fires, so it can score the model instead of just showing you what it
