@@ -11,8 +11,8 @@ than worked at. The bench dashboard is for us; this is for the table.
 
 Driving it, with nothing on screen to announce the keys:
 
-    4        this item is recyclable      -> capture, classify, score it
-    6        this item is non-recyclable  -> capture, classify, score it
+    4        this item is recyclable      -> classify it, score it
+    6        this item is non-recyclable  -> classify it, score it
     space    classify without scoring, for something you cannot label
     0        clear the tally between groups of judges
     esc      dismiss the verdict card early
@@ -22,6 +22,15 @@ verdict on screen is always the machine's own: the big word is read off the
 bin the classifier chose, so when it gets one wrong the screen says MISS
 rather than quietly agreeing with the key you pressed. A demo that applauds
 itself is worth nothing, and judges ask.
+
+By default a key classifies the viewfinder frame the host is already
+holding, which answers in about as long as the model takes - the screen is
+up in a second. `--full-capture` goes the long way instead: trigger the
+board, swap the sensor to SVGA, shoot, push ~18 kB up the wire. That frame
+is a better look at the object, and it is the one the scoring runs in
+`dashboard.py` use, but it costs most of a second you do not have in front
+of an audience. Either way the verdict shown is the model's, and the card
+says which frame it read.
 
 Only one process can hold the serial port, so run this *or* dashboard.py.
 
@@ -199,7 +208,7 @@ td.r { text-align:right; font-family:var(--mono); }
    flap holds, the sensor swaps back to SVGA and throws away two frames,
    then ~18 kB crosses the wire - and an empty screen for that long reads
    as a hang. So: a focus reticle, the way a camera says it is working.
-   The ring sweeps for 1.5 s and then, if the frame still has not landed,
+   The ring sweeps for 1 s and then, if the frame still has not landed,
    hands over to an indeterminate spin rather than sitting parked at full
    and lying about it. */
 .loader { position:relative; width:208px; height:208px; margin:16px auto 4px; }
@@ -207,14 +216,14 @@ td.r { text-align:right; font-family:var(--mono); }
 .loader circle { fill:none; stroke-width:1.5; }
 .loader .track { stroke:var(--rule); }
 .loader .arc { stroke:var(--ink); stroke-dasharray:339.3; stroke-dashoffset:339.3;
-               animation:fill 1.5s cubic-bezier(.4,0,.3,1) forwards; }
+               animation:fill 1s cubic-bezier(.4,0,.3,1) forwards; }
 @keyframes fill { to { stroke-dashoffset:38; } }
 .loader.over .arc { stroke-dasharray:74 340; stroke-dashoffset:0;
                     transform-origin:60px 60px; animation:spin 1.05s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
 /* the autofocus box, breathing */
-.ret { position:absolute; inset:58px; animation:breathe 1.5s ease-in-out infinite; }
+.ret { position:absolute; inset:58px; animation:breathe 1s ease-in-out infinite; }
 .ret i { position:absolute; width:18px; height:18px; border:1.5px solid var(--ink-2); }
 .ret i:nth-child(1){ top:0; left:0; border-right:0; border-bottom:0; }
 .ret i:nth-child(2){ top:0; right:0; border-left:0; border-bottom:0; }
@@ -225,15 +234,15 @@ td.r { text-align:right; font-family:var(--mono); }
 /* and a scan line across it, because that is what the thing is doing */
 .scanbox { position:absolute; inset:58px; overflow:hidden; }
 .scanbox b { position:absolute; left:0; right:0; height:1px; background:var(--dry);
-             box-shadow:0 0 7px var(--dry); animation:sweep 1.1s ease-in-out infinite; }
+             box-shadow:0 0 7px var(--dry); animation:sweep .75s ease-in-out infinite; }
 @keyframes sweep { 0%,100% { top:4%; } 50% { top:96%; } }
 
 .steps { margin-top:20px; display:flex; gap:22px; justify-content:center;
          font-family:var(--mono); font-size:11px; letter-spacing:.17em;
          text-transform:uppercase; color:var(--ink-3); }
-.steps span { opacity:.32; animation:stepon 1.65s linear infinite; }
-.steps span:nth-child(2) { animation-delay:.55s; }
-.steps span:nth-child(3) { animation-delay:1.1s; }
+.steps span { opacity:.32; animation:stepon 1.05s linear infinite; }
+.steps span:nth-child(2) { animation-delay:.35s; }
+.steps span:nth-child(3) { animation-delay:.7s; }
 @keyframes stepon { 0%{opacity:.32} 6%{opacity:1;color:var(--ink)}
                     30%{opacity:1;color:var(--ink)} 40%{opacity:.32} 100%{opacity:.32} }
 
@@ -253,6 +262,7 @@ td.r { text-align:right; font-family:var(--mono); }
    <div class="anno" style="letter-spacing:.16em">TEAM NULLVOID &middot; BUILDATHON 2026</div>
    <div><span class="dot" id="dot"></span><span class="v" id="link">—</span></div>
    <div><span class="k">MODEL</span><span class="v" id="model">—</span></div>
+   <div><span class="k">READS</span><span class="v" id="src">—</span></div>
    <div><span class="k">VIEWFINDER</span><span class="v" id="fps">—</span></div>
    <div class="spacer"></div>
    <div><span class="k">UP</span><span class="v" id="up">—</span></div>
@@ -338,6 +348,9 @@ td.r { text-align:right; font-family:var(--mono); }
 
 <script>
 const ROT = __ROT__;
+// true  = classify the viewfinder frame already in hand (fast, QQVGA)
+// false = trigger a full SVGA capture on the board (slower, better frame)
+const FAST = __FAST__;
 const AR = 4/3;                       // both QQVGA and SVGA are 4:3
 const turned = (ROT % 180) !== 0;
 
@@ -363,10 +376,12 @@ const CLASS_OF = {1:'RECYCLABLE', 2:'NON-RECYCLABLE'};
 const BIN_NOTE = {1:'BIN 1 \\u00b7 DRY', 2:'BIN 2 \\u00b7 WET'};
 const SAID = {recyclable:'recyclable', non_recyclable:'non-recyclable'};
 
-// How long the loader is on screen at minimum. The capture really does take
-// about this long; the floor only stops a fast one from flashing past before
-// anyone in the room has looked up.
-const MIN_WAIT_MS = 1500;
+// How long the loader is on screen at minimum. The classify itself is
+// milliseconds on the viewfinder path, so this is pacing, not progress: a
+// verdict that appeared the instant a key went down would look like the key
+// printed it. One second is long enough for the room to follow what
+// happened and short enough that nobody is waiting.
+const MIN_WAIT_MS = 1000;
 
 let curtainTimer = null, freezeTimer = null, overTimer = null;
 function curtain(state, shot) {
@@ -396,7 +411,8 @@ function curtain(state, shot) {
   document.getElementById('cWord').textContent = CLASS_OF[shot.bin];
   document.getElementById('cMeta').textContent =
     BIN_NOTE[shot.bin] + '  \\u00b7  ' + shot.label + ' ' + shot.confidence.toFixed(2)
-    + '  \\u00b7  ' + shot.latency_ms + ' ms';
+    + '  \\u00b7  ' + shot.latency_ms + ' ms  \\u00b7  '
+    + (shot.source === 'preview' ? 'viewfinder frame' : 'full capture');
   // The key only says what the object WAS. If the machine disagreed, the
   // screen says so - the alternative is a demo that cannot be wrong.
   let tag = '';
@@ -409,12 +425,13 @@ function curtain(state, shot) {
                             shot.correct === false ? 6500 : 4200);
 }
 
-function freeze(seq) {
+function freeze(seq, dims) {
   const st = document.getElementById('stage');
   document.getElementById('frozen').src = '/api/last.jpg?s=' + seq;
   st.classList.add('froze');
   document.getElementById('ovmode').textContent = 'AS CLASSIFIED';
-  document.getElementById('ovres').textContent = 'SVGA 800\\u00d7600';
+  document.getElementById('ovres').textContent = dims === '160x120'
+    ? 'QQVGA 160\\u00d7120' : 'SVGA 800\\u00d7600';
   document.getElementById('ovseq').textContent = '#' + seq;
   clearTimeout(freezeTimer);
   freezeTimer = setTimeout(() => {
@@ -436,7 +453,8 @@ async function shoot(truth) {
   document.getElementById('fnote').textContent = 'capturing\\u2026';
   try {
     const r = await fetch('/api/capture', {method:'POST',
-      headers:{'Content-Type':'application/json'}, body: JSON.stringify({truth})});
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({truth, fast: FAST})});
     const d = await r.json();
     if (!r.ok) {
       curtain('hide');
@@ -445,7 +463,7 @@ async function shoot(truth) {
       const left = MIN_WAIT_MS - (performance.now() - t0);
       if (left > 0) await sleep(left);
       curtain('verdict', d);
-      freeze(d.seq);
+      freeze(d.seq, d.dims);
       document.getElementById('fnote').textContent =
         'frame #' + d.seq + ' \\u00b7 ' + d.kb + ' kB \\u00b7 ' + d.detail;
     }
@@ -485,6 +503,8 @@ async function refresh() {
   document.getElementById('link').textContent =
     s.connected ? 'LINK 921600 8N1' : 'NO BOARD';
   document.getElementById('model').textContent = s.backend;
+  document.getElementById('src').textContent =
+    FAST ? 'viewfinder frame' : 'full capture';
   document.getElementById('fps').textContent = s.fps.toFixed(1) + ' fps';
   document.getElementById('up').textContent = hms(s.uptime);
   document.getElementById('sTotal').textContent = s.total;
@@ -521,14 +541,15 @@ setInterval(refresh, 1200); refresh();
 """
 
 
-def build_app(worker: Worker) -> FastAPI:
+def build_app(worker: Worker, full_capture: bool = False) -> FastAPI:
     app = FastAPI(title="Binary Bin showcase")
     mount_api(app, worker)
     app.mount("/static", StaticFiles(directory=str(STATIC)), name="static")
 
     @app.get("/", response_class=HTMLResponse)
     def index() -> str:
-        return PAGE.replace("__ROT__", str(SETTINGS.rotate_deg % 360))
+        return (PAGE.replace("__ROT__", str(SETTINGS.rotate_deg % 360))
+                    .replace("__FAST__", "false" if full_capture else "true"))
 
     return app
 
@@ -539,6 +560,12 @@ def main() -> int:
     ap.add_argument("--baud", type=int, default=SETTINGS.serial_baud)
     ap.add_argument("--host", default="127.0.0.1", help="HTTP bind address")
     ap.add_argument("--port-http", type=int, default=8081)
+    ap.add_argument(
+        "--full-capture",
+        action="store_true",
+        help="trigger a real SVGA capture per item instead of reading the "
+             "viewfinder frame: a better frame, about a second slower",
+    )
     args = ap.parse_args()
 
     clf = Classifier()
@@ -546,10 +573,13 @@ def main() -> int:
     worker.start()
 
     print(f"\n  showcase:  http://{args.host}:{args.port_http}")
+    print("  reads:", "full SVGA capture" if args.full_capture
+          else "viewfinder frame (--full-capture for the slow, better one)")
     print("  keys: 4 recyclable | 6 non-recyclable | space unscored |"
           " 0 reset | esc dismiss\n")
     uvicorn.run(
-        build_app(worker), host=args.host, port=args.port_http, log_level="warning"
+        build_app(worker, args.full_capture),
+        host=args.host, port=args.port_http, log_level="warning",
     )
     return 0
 

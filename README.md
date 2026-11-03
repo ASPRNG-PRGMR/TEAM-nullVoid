@@ -238,13 +238,21 @@ machine deciding, not a person at a console:
 | `0` | clear the tally between groups of judges |
 | `esc` | dismiss the verdict card early |
 
-Each capture puts a focus reticle on screen — a ring that sweeps for 1.5 s,
-a breathing autofocus box and a scan line — and then the verdict lands. The
-1.5 s is a floor, not a fake: it stops a quick one from flashing past before
-the room has looked up, and if the frame takes longer the ring hands over to
-an indeterminate spin rather than sitting parked at full. On the board,
-`kDryRun` now skips the servo-travel and flap-hold waits, which is 1.65 s of
-dead air that was moving nothing — reflash after changing it.
+A key puts a focus reticle on screen — a ring that sweeps for a second, a
+breathing autofocus box, a scan line — and then the verdict lands. **One
+second, start to finish.**
+
+It gets there by classifying the viewfinder frame the host is already
+holding instead of running a whole capture cycle: the model answers in
+about 11 ms, and the second on screen is pacing, not waiting. The frame is
+QQVGA rather than SVGA, so it is a weaker look at the object than a real
+capture — the card and the status bar both say `viewfinder frame` so it is
+never passed off as more than it is. `--full-capture` takes the long way
+(trigger the board, swap to SVGA, 18 kB up the wire) when the better frame
+matters more than the second.
+
+On the board, `kDryRun` also skips the servo-travel and flap-hold waits,
+which were 2.1 s of dead air moving nothing — reflash after changing it.
 
 `4` and `6` tell the *scoreboard* what the object really was. The verdict on
 screen is always the machine's own — the big word is read off the bin the

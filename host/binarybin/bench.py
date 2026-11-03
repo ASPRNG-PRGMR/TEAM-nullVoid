@@ -41,6 +41,12 @@ class Shot:
     latency_ms: int
     kb: int
     saved: str | None = None
+    # Which frame the verdict came from: "capture" is the SVGA frame the
+    # board shoots on a full cycle, "preview" is the QQVGA viewfinder frame
+    # the host already had in hand. The screen says which; they are not the
+    # same evidence and should never be presented as if they were.
+    source: str = "capture"
+    dims: str = "800x600"
 
     @property
     def correct(self) -> bool | None:
@@ -91,6 +97,10 @@ class Worker(threading.Thread):
         self.want_preview = True
         self._stop = threading.Event()
         self._frame_times: deque[float] = deque(maxlen=20)
+        self._fast_seq = 0
+        # Both paths can reach the model - the serial thread on a full cycle,
+        # an HTTP thread on a viewfinder classify. One at a time.
+        self._clf_lock = threading.Lock()
 
     @property
     def fps(self) -> float:
@@ -109,6 +119,49 @@ class Worker(threading.Thread):
         if not self._done.wait(timeout):
             return None
         return self._last_shot
+
+    def classify_preview(self, truth: str | None) -> Shot | None:
+        """Classify the viewfinder frame already in hand. No cycle, no wait.
+
+        The full path is: trigger the board, let it swap the sensor to SVGA,
+        shoot, push ~18 kB up the wire, classify. That is most of a second
+        even with the dead waits gone. For a demo the host is already
+        holding a fresh frame of the same scene, so this skips the round
+        trip entirely and answers in about as long as the model takes.
+
+        The frame is smaller - 160x120 upscaled to the model's 224 - so this
+        is a weaker look at the object than a real capture. It is a demo
+        path, not the scoring path, and the screen labels which one ran.
+        """
+        with self.lock:
+            jpeg, at = self.state.preview, self.state.preview_at
+            last_seq = self.state.shots[-1].seq if self.state.shots else 0
+        if jpeg is None or time.time() - at > PREVIEW_STALE_S:
+            return None
+        self._fast_seq = max(self._fast_seq, last_seq) + 1
+        seq = self._fast_seq
+        with self._clf_lock:
+            result = self.clf.classify_jpeg(jpeg, seq=seq, device="viewfinder")
+        saved = None
+        if truth:
+            # A separate tree: 160x120 frames must not quietly land in the
+            # set train_finetune.py reads, which is all full captures.
+            saved = str(
+                save(jpeg, truth, seq, result.label, result.confidence,
+                     root="dataset_qqvga").relative_to(REPO_ROOT)
+            )
+        shot = Shot(
+            seq=seq, truth=truth, label=result.label,
+            confidence=result.confidence, bin=result.bin, detail=result.detail,
+            latency_ms=result.latency_ms, kb=max(1, len(jpeg) // 1024),
+            saved=saved, source="preview", dims="160x120",
+        )
+        with self.lock:
+            self.state.shots.append(shot)
+            del self.state.shots[:-50]
+            self.state.last_jpeg = jpeg
+            self.state.last_jpeg_seq = seq
+        return shot
 
     def toggle_preview(self) -> bool:
         self.want_preview = not self.want_preview
@@ -181,7 +234,8 @@ class Worker(threading.Thread):
 
         if frame.type == proto.TYPE_IMAGE:
             seq, jpeg = proto.split_image_payload(frame.payload)
-            result = self.clf.classify_jpeg(jpeg, seq=seq, device="dashboard")
+            with self._clf_lock:
+                result = self.clf.classify_jpeg(jpeg, seq=seq, device="dashboard")
             reply = result.as_json()
             reply["seq"] = seq
             ser.write(proto.encode(proto.TYPE_VERDICT, json.dumps(reply).encode()))
@@ -226,8 +280,9 @@ class Worker(threading.Thread):
                 pass
 
 
-def save(data: bytes, truth: str, seq: int, pred: str, conf: float) -> Path:
-    out = REPO_ROOT / "data" / "dataset" / truth
+def save(data: bytes, truth: str, seq: int, pred: str, conf: float,
+         root: str = "dataset") -> Path:
+    out = REPO_ROOT / "data" / root / truth
     out.mkdir(parents=True, exist_ok=True)
     name = f"{time.strftime('%H%M%S')}_{seq:06d}_pred-{pred}-{int(conf * 100):03d}.jpg"
     path = out / name
@@ -276,9 +331,15 @@ def mount_api(app: FastAPI, worker: Worker) -> None:
 
     @app.post("/api/capture")
     async def capture(body: dict | None = None) -> JSONResponse:
-        truth = (body or {}).get("truth")
+        body = body or {}
+        truth = body.get("truth")
         if truth is not None and truth not in BIN_OF:
             return JSONResponse({"error": f"bad truth {truth!r}"}, status_code=400)
+        if body.get("fast"):
+            shot = worker.classify_preview(truth)
+            if shot is None:
+                return JSONResponse({"error": "no live frame"}, status_code=503)
+            return JSONResponse(shot.as_dict())
         shot = worker.capture(truth)
         if shot is None:
             return JSONResponse({"error": "timed out"}, status_code=504)
