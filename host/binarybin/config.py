@@ -36,10 +36,12 @@ class Settings:
     # camera module ends up mounted on its side in the load bay. Only the copy
     # fed to the model is rotated; the archived JPEG stays as the sensor sent
     # it. One of 0/90/180/270.
-    # 90 is measured for this rig: the module images a quarter turn clockwise
-    # of upright, so the model needs it turned back. Set BB_ROTATE=0 if you
-    # remount the sensor square.
-    rotate_deg: int = int(os.environ.get("BB_ROTATE", "90"))
+    # 270 is what this rig needs now: the module images a quarter turn
+    # clockwise of upright (that was the original 90) and is mounted
+    # inverted in the bay, so the correction is 90 + 180. Override without
+    # editing anything with BB_ROTATE=90 if the module goes back the other
+    # way up, or BB_ROTATE=0 if you remount it square.
+    rotate_deg: int = int(os.environ.get("BB_ROTATE", "270"))
 
     # "auto" picks mobilenet if torch is importable, else heuristic.
     backend: str = os.environ.get("BB_BACKEND", "auto")

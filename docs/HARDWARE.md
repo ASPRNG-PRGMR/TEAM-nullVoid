@@ -191,11 +191,12 @@ capture archive. What has not: anything that moves.
 
 ## Camera orientation
 
-The frames this module produces come out rotated ~90° relative to the room.
-`set_vflip` handles the usual upside-down module but cannot fix a quarter
-turn, so either mount the sensor square in the load bay or set `BB_ROTATE`
-(0/90/180/270) on the host, which rotates the copy fed to the model and
-leaves the archived JPEG untouched. It is not cosmetic — the same frame
+The frames this module produces come out rotated ~90° relative to the room,
+and the module is mounted inverted in the bay on top of that, so the host
+correction is **270°** (90 + 180). `set_vflip` handles the upside-down half
+but cannot fix a quarter turn, so either mount the sensor square in the load
+bay or set `BB_ROTATE` (0/90/180/270) on the host, which rotates the copy fed
+to the model and leaves the archived JPEG untouched. It is not cosmetic — the same frame
 classified at 0° and 90° came back `non_recyclable 0.57` and
 `recyclable 0.60`.
 
