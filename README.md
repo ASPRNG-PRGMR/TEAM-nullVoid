@@ -185,6 +185,17 @@ python serve_uart.py --trigger 8     # sends that 'g' every 8 s
 python tools/contact_sheet.py        # grid of captures + the verdict each got
 ```
 
+### 5. Testing with real objects
+
+`tools/bench_test.py` is the one to use. It asks what the object actually is
+before it fires, so it can score the model instead of just showing you what it
+guessed, and each frame lands in `data/dataset/<truth>/` — the layout
+`train_finetune.py` wants. A test session *is* the dataset collection.
+
+```bash
+cd host && python tools/bench_test.py
+```
+
 ## Training on your own bin
 
 ```bash

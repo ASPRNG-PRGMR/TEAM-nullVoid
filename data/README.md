@@ -12,7 +12,15 @@ data/dataset/recyclable/
 data/dataset/non_recyclable/
 ```
 
-then run `host/tools/train_finetune.py`. Captures and datasets are gitignored;
+then run `host/tools/train_finetune.py`.
+
+Sorting by hand is the slow way. `host/tools/bench_test.py` asks you what each
+object actually is *before* it triggers the capture, so the frame goes
+straight into the right folder and you get an accuracy score for free:
+
+```bash
+cd host && python tools/bench_test.py
+``` Captures and datasets are gitignored;
 only this file and `captures/.gitkeep` are tracked.
 
 `telemetry.jsonl` gets one line per completed cycle (sequence, label,
