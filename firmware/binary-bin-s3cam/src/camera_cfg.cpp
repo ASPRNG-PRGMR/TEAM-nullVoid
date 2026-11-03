@@ -45,6 +45,7 @@ camera_config_t makeConfig() {
 }  // namespace
 
 constexpr bool kHaveFlashLed = (BB_PIN_FLASH_LED >= 0);
+bool g_preview = false;
 
 void flash(uint8_t duty) {
   if (!kHaveFlashLed) return;
@@ -103,6 +104,38 @@ bool begin() {
 
   Serial.printf("[cam] up: %s, SVGA JPEG q%d\n", g_sensor, cfg::kJpegQuality);
   return true;
+}
+
+bool previewMode() { return g_preview; }
+
+bool setPreviewMode(bool on) {
+  if (on == g_preview) return true;
+  sensor_t* s = esp_camera_sensor_get();
+  if (s == nullptr) return false;
+  // Only ever downwards from the size the driver allocated its buffers for,
+  // so the PSRAM frame buffers stay big enough.
+  if (s->set_framesize(s, on ? FRAMESIZE_QQVGA : FRAMESIZE_SVGA) != 0) {
+    Serial.println("[cam] set_framesize failed");
+    return false;
+  }
+  g_preview = on;
+  // The sensor needs a couple of frames to resync after a size change; hand
+  // them back rather than shipping a torn one to the viewfinder.
+  for (int i = 0; i < 2; ++i) {
+    camera_fb_t* fb = esp_camera_fb_get();
+    if (fb != nullptr) esp_camera_fb_return(fb);
+  }
+  return true;
+}
+
+camera_fb_t* grab() {
+  camera_fb_t* fb = esp_camera_fb_get();
+  if (fb == nullptr) return nullptr;
+  if (fb->format != PIXFORMAT_JPEG) {
+    esp_camera_fb_return(fb);
+    return nullptr;
+  }
+  return fb;
 }
 
 camera_fb_t* captureWithFlash() {

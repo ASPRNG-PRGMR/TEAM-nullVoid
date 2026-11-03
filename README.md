@@ -185,7 +185,23 @@ python serve_uart.py --trigger 8     # sends that 'g' every 8 s
 python tools/contact_sheet.py        # grid of captures + the verdict each got
 ```
 
-### 5. Testing with real objects
+### 5. Seeing what the camera sees
+
+```bash
+cd host && python dashboard.py        # http://127.0.0.1:8080
+```
+
+A live QQVGA viewfinder in the browser, so you can aim the lens instead of
+guessing, with the labelling buttons next to the picture. The feed runs over
+the same serial line as everything else and only while the machine is idle —
+a classification frame is SVGA and the sensor cannot be both at once.
+
+Only one process can hold the serial port, so the dashboard *replaces*
+`serve_uart.py` and `tools/bench_test.py` while it runs. It scores and saves
+to the same place. It binds to localhost by default; the page can move the
+mechanism, so only pass `--host 0.0.0.0` on a network you trust.
+
+### 6. Testing with real objects, from the terminal
 
 `tools/bench_test.py` is the one to use. It asks what the object actually is
 before it fires, so it can score the model instead of just showing you what it

@@ -106,3 +106,23 @@ v2 moves inference onto the S3. That is a third `bb::Link` implementation
 whose `classify()` runs an INT8 model in PSRAM and returns immediately. The
 state machine, the interlocks and the verdict shape all stay as they are; the
 network just stops being in the loop.
+
+## 0x03 PREVIEW — viewfinder frames
+
+Device to host, fire and forget. The payload is a bare JPEG with no sequence
+number: these frames are a viewfinder, so a dropped one is worth nothing and
+costs nothing.
+
+The firmware drops the sensor to QQVGA (160x120) while previewing, which puts
+a frame at roughly 1.2 kB — about 7 fps once framing and the 100 ms
+`kPreviewIntervalMs` tick are accounted for. Measured on the bench: 40 frames
+in 6 s, zero CRC errors.
+
+Preview runs **only in IDLE**. A classification frame is SVGA and the sensor
+cannot be at two sizes at once, so the state machine drops out of preview
+before a capture and restores it afterwards.
+
+`v` on the console toggles it. Because that is a toggle rather than a set, a
+host that wants it on should ask and then check whether frames actually
+arrive — `dashboard.py` re-sends `v` if nothing shows up within 2.5 s, which
+converges from either starting state.

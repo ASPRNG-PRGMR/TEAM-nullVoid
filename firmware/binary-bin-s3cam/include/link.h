@@ -32,6 +32,12 @@ class Link {
   // Fire-and-forget. Never blocks the cycle.
   virtual void log(const char* line) = 0;
   virtual void telemetry(const char* json) = 0;
+  // Low-rate viewfinder frames, for aiming the camera. A transport that has
+  // no use for them drops them, so this is never required of an implementation.
+  virtual void preview(const uint8_t* jpeg, size_t len) {
+    (void)jpeg;
+    (void)len;
+  }
   virtual const char* name() const = 0;
 };
 

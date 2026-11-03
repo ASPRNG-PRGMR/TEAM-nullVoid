@@ -27,6 +27,7 @@ Verdict  g_verdict;
 uint32_t g_cycleStart = 0;
 bool     g_faultSwReleased = false;
 bool     g_consoleGo = false;  // this cycle was started from the console
+bool     g_previewWanted = false;  // viewfinder requested from the console
 uint32_t g_counts[3] = {0, 0, 0};  // [0] unused, [1] bin1, [2] bin2
 uint32_t g_fallbacks = 0;
 
@@ -43,19 +44,41 @@ uint32_t elapsed() { return millis() - g_enteredAt; }
 bool personPresent() { return digitalRead(BB_PIN_PRESENCE) == LOW; }
 bool beamBroken()    { return digitalRead(BB_PIN_BREAKBEAM) == LOW; }
 
-// Bench trigger, for bring-up before the sensors exist. Consumes console
-// keystrokes but stops dead at 0xA5 - the first byte of a link frame - so the
-// UART link's own traffic is left untouched.
-bool consoleTriggered() {
-  if (!cfg::kSerialTrigger) return false;
+// Console commands, for bring-up before the sensors exist:
+//   g  start one cycle, standing in for the presence sensor / break-beam
+//   v  toggle the viewfinder stream
+// Consumes console keystrokes but stops dead at 0xA5 - the first byte of a
+// link frame - so the UART link's own traffic is left untouched.
+struct ConsoleCmd {
   bool go = false;
+  bool togglePreview = false;
+};
+
+ConsoleCmd consoleCommand() {
+  ConsoleCmd cmd;
+  if (!cfg::kSerialTrigger) return cmd;
   while (Serial.available() > 0) {
     const int c = Serial.peek();
     if (c == 0xA5) break;
     Serial.read();
-    if (c == 'g' || c == 'G') go = true;
+    if (c == 'g' || c == 'G') cmd.go = true;
+    if (c == 'v' || c == 'V') cmd.togglePreview = true;
   }
-  return go;
+  return cmd;
+}
+
+// Ship one viewfinder frame, no faster than kPreviewIntervalMs. Only ever
+// called from IDLE: the sensor is at QQVGA here, and a classification frame
+// must be SVGA, so the two must never overlap.
+void pumpPreview() {
+  static uint32_t last = 0;
+  if (g_link == nullptr) return;
+  if (millis() - last < cfg::kPreviewIntervalMs) return;
+  last = millis();
+  camera_fb_t* fb = cam::grab();
+  if (fb == nullptr) return;
+  g_link->preview(fb->buf, fb->len);
+  cam::release(fb);
 }
 
 void reportCycle() {
@@ -132,8 +155,21 @@ void tick() {
       delay(cfg::kIdlePollMs);
       // The break-beam is the more reliable trigger of the two: someone can
       // post an item through without ever tripping the proximity sensor.
-      g_consoleGo = consoleTriggered();
-      if (!personPresent() && !beamBroken() && !g_consoleGo) break;
+      const ConsoleCmd cmd = consoleCommand();
+      if (cmd.togglePreview) {
+        g_previewWanted = !g_previewWanted;
+        Serial.printf("[sm] viewfinder %s\n", g_previewWanted ? "on" : "off");
+      }
+      g_consoleGo = cmd.go;
+
+      if (!personPresent() && !beamBroken() && !g_consoleGo) {
+        // Idle is the only place the viewfinder runs, so the sensor is never
+        // at QQVGA when a frame is wanted for classification.
+        cam::setPreviewMode(g_previewWanted);
+        if (g_previewWanted) pumpPreview();
+        break;
+      }
+      cam::setPreviewMode(false);  // back to SVGA for the real capture
       g_cycleStart = millis();
       g_seq++;
       if (!motion::openFlap()) {

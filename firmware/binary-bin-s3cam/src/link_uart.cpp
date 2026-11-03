@@ -25,6 +25,7 @@ constexpr uint8_t kSync1 = 0x5A;
 
 constexpr uint8_t kTypeImage     = 0x01;
 constexpr uint8_t kTypeVerdict   = 0x02;
+constexpr uint8_t kTypePreview   = 0x03;
 constexpr uint8_t kTypeLog       = 0x10;
 constexpr uint8_t kTypeTelemetry = 0x11;
 constexpr uint8_t kTypeHello     = 0x20;
@@ -110,6 +111,10 @@ class UartLink final : public Link {
     strlcpy(v.label, doc["label"] | "?", sizeof(v.label));
     v.latencyMs = millis() - t0;
     return v;
+  }
+
+  void preview(const uint8_t* jpeg, size_t len) override {
+    sendFrame(kTypePreview, jpeg, len);
   }
 
   void log(const char* line) override {

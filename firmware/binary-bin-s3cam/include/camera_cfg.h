@@ -15,6 +15,16 @@ bool begin();
 camera_fb_t* captureWithFlash();
 void release(camera_fb_t* fb);
 
+// Viewfinder. Drops the sensor to QQVGA so frames are a few kB and the
+// serial line can carry them at video-ish rates; restores SVGA when off.
+// Idempotent, so it is safe to call every tick.
+bool setPreviewMode(bool on);
+bool previewMode();
+
+// A plain frame at whatever size the sensor is currently set to. No flash,
+// no settling delay. Caller MUST hand the buffer back with release().
+camera_fb_t* grab();
+
 void flash(uint8_t duty);  // 0 = off, 255 = full
 const char* sensorName();
 

@@ -93,5 +93,10 @@ constexpr bool kDryRun = true;   // true = run the state machine, never move a m
 // with 0xA5 0x5A, so console keystrokes and link traffic cannot be confused.
 constexpr bool kSerialTrigger = true;
 
+// Viewfinder frame interval while preview is on. 100 ms is about as fast as
+// a QQVGA JPEG clears 921600 baud without crowding out everything else on
+// the wire.
+constexpr uint32_t kPreviewIntervalMs = 100;
+
 }  // namespace cfg
 }  // namespace bb
