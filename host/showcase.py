@@ -194,6 +194,58 @@ td.r { text-align:right; font-family:var(--mono); }
 .card .tag.miss { border:1px solid var(--amber); color:var(--amber); }
 .card .tag.hit  { border:1px solid var(--rule-strong); color:var(--ink-3); }
 .card .wait { color:var(--ink-3); }
+
+/* The wait. A capture is roughly a second and a half of real work - the
+   flap holds, the sensor swaps back to SVGA and throws away two frames,
+   then ~18 kB crosses the wire - and an empty screen for that long reads
+   as a hang. So: a focus reticle, the way a camera says it is working.
+   The ring sweeps for 1.5 s and then, if the frame still has not landed,
+   hands over to an indeterminate spin rather than sitting parked at full
+   and lying about it. */
+.loader { position:relative; width:208px; height:208px; margin:16px auto 4px; }
+.loader svg { width:100%; height:100%; transform:rotate(-90deg); }
+.loader circle { fill:none; stroke-width:1.5; }
+.loader .track { stroke:var(--rule); }
+.loader .arc { stroke:var(--ink); stroke-dasharray:339.3; stroke-dashoffset:339.3;
+               animation:fill 1.5s cubic-bezier(.4,0,.3,1) forwards; }
+@keyframes fill { to { stroke-dashoffset:38; } }
+.loader.over .arc { stroke-dasharray:74 340; stroke-dashoffset:0;
+                    transform-origin:60px 60px; animation:spin 1.05s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* the autofocus box, breathing */
+.ret { position:absolute; inset:58px; animation:breathe 1.5s ease-in-out infinite; }
+.ret i { position:absolute; width:18px; height:18px; border:1.5px solid var(--ink-2); }
+.ret i:nth-child(1){ top:0; left:0; border-right:0; border-bottom:0; }
+.ret i:nth-child(2){ top:0; right:0; border-left:0; border-bottom:0; }
+.ret i:nth-child(3){ bottom:0; left:0; border-right:0; border-top:0; }
+.ret i:nth-child(4){ bottom:0; right:0; border-left:0; border-top:0; }
+@keyframes breathe { 50% { transform:scale(.82); opacity:.75; } }
+
+/* and a scan line across it, because that is what the thing is doing */
+.scanbox { position:absolute; inset:58px; overflow:hidden; }
+.scanbox b { position:absolute; left:0; right:0; height:1px; background:var(--dry);
+             box-shadow:0 0 7px var(--dry); animation:sweep 1.1s ease-in-out infinite; }
+@keyframes sweep { 0%,100% { top:4%; } 50% { top:96%; } }
+
+.steps { margin-top:20px; display:flex; gap:22px; justify-content:center;
+         font-family:var(--mono); font-size:11px; letter-spacing:.17em;
+         text-transform:uppercase; color:var(--ink-3); }
+.steps span { opacity:.32; animation:stepon 1.65s linear infinite; }
+.steps span:nth-child(2) { animation-delay:.55s; }
+.steps span:nth-child(3) { animation-delay:1.1s; }
+@keyframes stepon { 0%{opacity:.32} 6%{opacity:1;color:var(--ink)}
+                    30%{opacity:1;color:var(--ink)} 40%{opacity:.32} 100%{opacity:.32} }
+
+/* the reveal itself: the word should land, not fade in */
+@keyframes land { from { opacity:0; transform:scale(.93); }
+                  to   { opacity:1; transform:scale(1); } }
+.card.revealed .big { animation:land .26s cubic-bezier(.2,.9,.3,1.3) both; }
+@media (prefers-reduced-motion:reduce) {
+  .loader .arc, .loader.over .arc, .ret, .scanbox b, .steps span,
+  .card.revealed .big { animation:none; }
+  .loader .arc { stroke-dashoffset:120; }
+}
 </style></head><body>
 <div class="app">
  <div class="bar">
@@ -266,10 +318,21 @@ td.r { text-align:right; font-family:var(--mono); }
 <div class="curtain" id="curtain">
   <div class="card" id="card">
     <div class="anno" id="cTop">Verdict</div>
-    <div class="big" id="cWord">—</div>
-    <div class="rule"></div>
-    <div class="meta" id="cMeta"></div>
-    <div id="cTagWrap"></div>
+    <div id="waitBox" hidden>
+      <div class="loader" id="loader">
+        <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="54"/>
+          <circle class="arc" cx="60" cy="60" r="54"/></svg>
+        <div class="ret"><i></i><i></i><i></i><i></i></div>
+        <div class="scanbox"><b></b></div>
+      </div>
+      <div class="steps"><span>capture</span><span>link</span><span>classify</span></div>
+    </div>
+    <div id="resultBox">
+      <div class="big" id="cWord">—</div>
+      <div class="rule"></div>
+      <div class="meta" id="cMeta"></div>
+      <div id="cTagWrap"></div>
+    </div>
   </div>
 </div>
 
@@ -300,21 +363,35 @@ const CLASS_OF = {1:'RECYCLABLE', 2:'NON-RECYCLABLE'};
 const BIN_NOTE = {1:'BIN 1 \\u00b7 DRY', 2:'BIN 2 \\u00b7 WET'};
 const SAID = {recyclable:'recyclable', non_recyclable:'non-recyclable'};
 
-let curtainTimer = null, freezeTimer = null;
+// How long the loader is on screen at minimum. The capture really does take
+// about this long; the floor only stops a fast one from flashing past before
+// anyone in the room has looked up.
+const MIN_WAIT_MS = 1500;
+
+let curtainTimer = null, freezeTimer = null, overTimer = null;
 function curtain(state, shot) {
   const el = document.getElementById('curtain'), card = document.getElementById('card');
+  const waitBox = document.getElementById('waitBox');
+  const resultBox = document.getElementById('resultBox');
+  const loader = document.getElementById('loader');
   clearTimeout(curtainTimer);
-  if (state === 'hide') { el.className = 'curtain'; return; }
+  if (state === 'hide') { el.className = 'curtain'; clearTimeout(overTimer); return; }
   if (state === 'wait') {
     card.className = 'card';
     document.getElementById('cTop').textContent = 'Capturing';
-    document.getElementById('cWord').innerHTML = '<span class="wait">\\u2026</span>';
-    document.getElementById('cMeta').textContent = 'full-resolution frame over the link';
-    document.getElementById('cTagWrap').innerHTML = '';
+    waitBox.hidden = false;
+    resultBox.hidden = true;
+    loader.className = 'loader';   // restart the ring from empty every time
+    void loader.offsetWidth;
+    clearTimeout(overTimer);
+    overTimer = setTimeout(() => loader.classList.add('over'), MIN_WAIT_MS);
     el.className = 'curtain show';
     return;
   }
-  card.className = 'card b' + shot.bin;
+  clearTimeout(overTimer);
+  waitBox.hidden = true;
+  resultBox.hidden = false;
+  card.className = 'card revealed b' + shot.bin;
   document.getElementById('cTop').textContent = 'Verdict';
   document.getElementById('cWord').textContent = CLASS_OF[shot.bin];
   document.getElementById('cMeta').textContent =
@@ -348,10 +425,13 @@ function freeze(seq) {
   }, 5000);
 }
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 let busy = false;
 async function shoot(truth) {
   if (busy) return;
   busy = true;
+  const t0 = performance.now();
   curtain('wait');
   document.getElementById('fnote').textContent = 'capturing\\u2026';
   try {
@@ -362,6 +442,8 @@ async function shoot(truth) {
       curtain('hide');
       document.getElementById('fnote').textContent = 'capture failed: ' + (d.error || r.status);
     } else {
+      const left = MIN_WAIT_MS - (performance.now() - t0);
+      if (left > 0) await sleep(left);
       curtain('verdict', d);
       freeze(d.seq);
       document.getElementById('fnote').textContent =

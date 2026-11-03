@@ -183,8 +183,9 @@ void tick() {
     case State::kFlapOpen: {
       if (g_consoleGo || beamBroken()) {
         // Item on its way in. Hold the flap a moment so a second item in the
-        // same handful is not guillotined by the closing lid.
-        delay(cfg::kFlapHoldMs);
+        // same handful is not guillotined by the closing lid - a lid that
+        // only exists when something is actually driving it.
+        if (!cfg::kDryRun) delay(cfg::kFlapHoldMs);
         motion::closeFlap();
         enter(State::kCapture);
         break;

@@ -109,7 +109,10 @@ bool runSteps(long steps, bool forward, float cruiseMmPerSec, uint32_t timeoutMs
 
 void writeServo(Servo& s, int deg) {
   s.write(constrain(deg, 0, 180));
-  delay(cfg::kServoTravelMs);
+  // The wait is for a horn that is physically travelling. In dry run there
+  // is no horn, and three of these in the path before a capture put 1.35 s
+  // of dead air in front of every verdict on the demo screen.
+  if (!cfg::kDryRun) delay(cfg::kServoTravelMs);
 }
 
 }  // namespace

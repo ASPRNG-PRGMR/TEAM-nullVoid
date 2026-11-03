@@ -238,6 +238,14 @@ machine deciding, not a person at a console:
 | `0` | clear the tally between groups of judges |
 | `esc` | dismiss the verdict card early |
 
+Each capture puts a focus reticle on screen — a ring that sweeps for 1.5 s,
+a breathing autofocus box and a scan line — and then the verdict lands. The
+1.5 s is a floor, not a fake: it stops a quick one from flashing past before
+the room has looked up, and if the frame takes longer the ring hands over to
+an indeterminate spin rather than sitting parked at full. On the board,
+`kDryRun` now skips the servo-travel and flap-hold waits, which is 1.65 s of
+dead air that was moving nothing — reflash after changing it.
+
 `4` and `6` tell the *scoreboard* what the object really was. The verdict on
 screen is always the machine's own — the big word is read off the bin the
 classifier picked — so when it gets one wrong the card says MISS instead of
