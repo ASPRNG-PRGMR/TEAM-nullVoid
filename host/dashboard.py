@@ -9,6 +9,10 @@ This serves them as MJPEG and puts the labelling buttons next to the picture.
     python dashboard.py --port-http 9000
     python dashboard.py --host 0.0.0.0  # reachable from the LAN - see below
 
+Numpad 4 scores the item as recyclable (bin 1) and numpad 6 as
+non-recyclable (bin 2), so you can keep both hands on the objects; every
+capture answers with a popup saying whether it was routed correctly.
+
 Only one process can hold the serial port, so this *replaces*
 `tools/bench_test.py` and `serve_uart.py` while it runs; it does the same
 scoring and writes to the same `data/dataset/<truth>/` layout.
@@ -283,6 +287,22 @@ PAGE = """<!doctype html>
  .detail { color:var(--muted); font-size:12px; }
  pre { background:#f6f2e9; padding:10px; border-radius:8px; font-size:12px;
        max-height:150px; overflow:auto; margin:0; }
+ kbd { font:12px/1 ui-monospace,monospace; border:1px solid #d8d2c6;
+       border-bottom-width:2px; border-radius:5px; padding:3px 6px;
+       background:#fff; color:var(--muted); margin-left:7px; }
+ /* The popup is deliberately large and centred at the top: when you are
+    standing at the bench with an object in your hand, the screen is an
+    arm's length away and a line in a table is unreadable. */
+ .toast { position:fixed; left:50%; bottom:10px; transform:translateX(-50%);
+          min-width:360px; max-width:92vw; padding:16px 22px; border-radius:12px;
+          background:#fff; border:1px solid #e0dacd; border-left:8px solid var(--muted);
+          box-shadow:0 12px 34px rgba(0,0,0,.18); z-index:50;
+          opacity:0; pointer-events:none; transition:opacity .14s, bottom .14s; }
+ .toast.show { opacity:1; bottom:24px; }
+ .toast.good { border-left-color:var(--teal); }
+ .toast.bad  { border-left-color:#b4452c; }
+ .toast h2 { margin:0 0 3px; font-size:21px; letter-spacing:.01em; }
+ .toast p  { margin:0; color:var(--muted); font-size:13px; }
 </style></head><body>
 <header>
   <h1>Binary Bin &middot; viewfinder</h1>
@@ -304,10 +324,12 @@ PAGE = """<!doctype html>
   <h3 style="margin:0 0 4px">Score an object</h3>
   <p class="detail" style="margin:0 0 10px">
     Hold the item under the lens, then say what it <em>actually</em> is.
-    The frame is saved into <code>data/dataset/&lt;truth&gt;/</code>.</p>
+    The frame is saved into <code>data/dataset/&lt;truth&gt;/</code>.
+    Numpad <strong>4</strong> and <strong>6</strong> do the same thing without
+    the mouse &mdash; left key, left bin.</p>
   <div class="row">
-    <button class="b1" onclick="shoot('recyclable')">recyclable &rarr; bin 1</button>
-    <button class="b2" onclick="shoot('non_recyclable')">non-recyclable &rarr; bin 2</button>
+    <button class="b1" onclick="shoot('recyclable')">recyclable &rarr; bin 1<kbd>4</kbd></button>
+    <button class="b2" onclick="shoot('non_recyclable')">non-recyclable &rarr; bin 2<kbd>6</kbd></button>
   </div>
   <div class="score" id="score">0/0</div>
   <div class="detail" id="scoresub">nothing scored yet</div>
@@ -317,6 +339,7 @@ PAGE = """<!doctype html>
   <pre id="log"></pre>
  </div>
 </main>
+<div class="toast" id="toast"><h2 id="tmsg"></h2><p id="tsub"></p></div>
 <script>
 const ROT = __ROT__;           // degrees, matching BB_ROTATE
 function layout() {
@@ -337,14 +360,60 @@ function layout() {
 }
 addEventListener('resize', layout); addEventListener('load', layout);
 
+const SAID = {recyclable:'recyclable', non_recyclable:'non-recyclable'};
+let toastTimer = null;
+function toast(kind, msg, sub, holdMs) {
+  const el = document.getElementById('toast');
+  document.getElementById('tmsg').textContent = msg;
+  document.getElementById('tsub').textContent = sub || '';
+  el.className = 'toast show ' + (kind || '');
+  clearTimeout(toastTimer);
+  // holdMs 0 means "leave it up": the capture is still in flight and the
+  // next call replaces it with the verdict.
+  if (holdMs) toastTimer = setTimeout(() => { el.className = 'toast ' + (kind||''); }, holdMs);
+}
+
+let busy = false;
 async function shoot(truth) {
+  if (busy) return;            // keys repeat, and a cycle owns the serial port
+  busy = true;
   const bs = document.querySelectorAll('button');
   bs.forEach(b => b.disabled = true);
+  toast('', truth ? 'capturing \u2014 ' + SAID[truth] : 'capturing\u2026',
+        'hold it still, this frame is full resolution', 0);
   try {
-    await fetch('/api/capture', {method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({truth})});
-  } finally { bs.forEach(b => b.disabled = false); refresh(); }
+    const r = await fetch('/api/capture', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({truth})});
+    const d = await r.json();
+    if (!r.ok) {
+      toast('bad', 'capture failed', d.error || ('HTTP ' + r.status), 5000);
+    } else {
+      const verdict = d.label + ' ' + d.confidence.toFixed(2) + ' \u2192 bin ' + d.bin;
+      if (d.truth === null) toast('', 'captured', verdict, 4000);
+      else if (d.correct)   toast('good', 'OK \u2014 bin ' + d.bin,
+                                  'you said ' + SAID[d.truth] + ' \u00b7 model said ' + verdict, 3500);
+      else                  toast('bad', 'MISS \u2014 went to bin ' + d.bin,
+                                  'you said ' + SAID[d.truth] + ' \u00b7 model said ' + verdict, 6000);
+    }
+  } catch (e) {
+    toast('bad', 'capture failed', String(e), 5000);
+  } finally { busy = false; bs.forEach(b => b.disabled = false); refresh(); }
 }
+
+// Numpad 4 -> bin 1, numpad 6 -> bin 2, laid out like the bins themselves.
+// Keyed on e.code, the physical key, so this still works with NumLock off
+// where e.key reads 'ArrowLeft'; the top-row digits are accepted too.
+const KEYS = {Numpad4:'recyclable',     Digit4:'recyclable',
+              Numpad6:'non_recyclable', Digit6:'non_recyclable'};
+addEventListener('keydown', e => {
+  if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const truth = KEYS[e.code];
+  if (!truth) return;
+  e.preventDefault();
+  shoot(truth);
+});
 async function togglePreview() {
   const r = await (await fetch('/api/preview', {method:'POST'})).json();
   document.getElementById('pv').textContent = r.on ? 'pause feed' : 'resume feed';

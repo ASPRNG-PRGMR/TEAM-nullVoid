@@ -196,6 +196,12 @@ guessing, with the labelling buttons next to the picture. The feed runs over
 the same serial line as everything else and only while the machine is idle —
 a classification frame is SVGA and the sensor cannot be both at once.
 
+**Numpad 4** scores the item as recyclable (bin 1) and **numpad 6** as
+non-recyclable (bin 2) — left key, left bin — so both hands stay on the
+objects. Each capture answers with a popup large enough to read from the
+bench: `OK — bin 1` in teal, `MISS — went to bin 2` in red, with what you
+said and what the model said underneath.
+
 Only one process can hold the serial port, so the dashboard *replaces*
 `serve_uart.py` and `tools/bench_test.py` while it runs. It scores and saves
 to the same place. It binds to localhost by default; the page can move the
