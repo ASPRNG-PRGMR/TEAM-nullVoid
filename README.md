@@ -182,6 +182,7 @@ starts one cycle. For a hands-off demo loop:
 
 ```bash
 python serve_uart.py --trigger 8     # sends that 'g' every 8 s
+python tools/contact_sheet.py        # grid of captures + the verdict each got
 ```
 
 ## Training on your own bin

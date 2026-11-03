@@ -198,3 +198,28 @@ turn, so either mount the sensor square in the load bay or set `BB_ROTATE`
 leaves the archived JPEG untouched. It is not cosmetic — the same frame
 classified at 0° and 90° came back `non_recyclable 0.57` and
 `recyclable 0.60`.
+
+## No illuminator on this board
+
+Confirmed by eye on 2026-11-03: the only LED on our board is a green power
+indicator. There is no white flash LED, so `BB_PIN_FLASH_LED` is `-1` for the
+generic profile and `cam::flash()` is a no-op. Two consequences:
+
+- `kFlashWarmupMs` is skipped, which takes 120 ms off every capture.
+- The gain ceiling goes to 16X instead of 4X, because nothing is adding light.
+
+This is fine on an open bench and **will not be fine inside a closed load
+bay**, which is dark. Budget an illuminator: a white LED or a small ring light
+on a spare GPIO (3.3 V logic through a transistor, not straight off the pin),
+then set `-DBB_PIN_FLASH_LED=<gpio>` and drop the gain ceiling back.
+
+## Tuning the camera
+
+`host/tools/contact_sheet.py` lays the newest captures out in a grid with the
+verdict each one got, rotated the way the model sees them:
+
+```bash
+python tools/contact_sheet.py --count 24      # writes sheet.png next to them
+```
+
+Run `serve_uart.py --trigger 6` alongside it and hold items under the lens.

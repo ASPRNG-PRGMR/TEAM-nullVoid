@@ -64,15 +64,26 @@
 #endif
 
 // ------------------------------------------------------------- flash LED ---
-// The onboard white LED next to the lens. Drive it through LEDC so we can dim
-// it: full brightness blows out close-up plastics and the highlight eats the
-// label we are trying to read.
-#if BB_BOARD_PROFILE == BB_BOARD_FREENOVE
+// The white LED next to the lens, driven through LEDC so we can dim it: full
+// brightness blows out close-up plastics and the highlight eats the label we
+// are trying to read.
+//
+// -1 means this board has no illuminator, and that is the case on the clone
+// we actually have - its only LED is a green power indicator. Plenty of
+// otherwise identical "ESP32-S3-CAM" boards do carry a white LED on GPIO 48,
+// so set it back if yours does; the prober blinks each candidate.
+//
+// With no illuminator the camera is at the mercy of ambient light, which is
+// fine on an open bench and will not be fine inside a closed load bay. See
+// docs/HARDWARE.md.
+#if defined(BB_PIN_FLASH_LED)
+// supplied by the build, e.g. -DBB_PIN_FLASH_LED=48
+#elif BB_BOARD_PROFILE == BB_BOARD_FREENOVE
 #define BB_PIN_FLASH_LED 2
 #elif BB_BOARD_PROFILE == BB_BOARD_XIAO_SENSE
 #define BB_PIN_FLASH_LED 21
 #else
-#define BB_PIN_FLASH_LED 48
+#define BB_PIN_FLASH_LED (-1)
 #endif
 
 // -------------------------------------------------------------- actuators --

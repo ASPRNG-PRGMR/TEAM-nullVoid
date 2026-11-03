@@ -44,14 +44,21 @@ camera_config_t makeConfig() {
 
 }  // namespace
 
+constexpr bool kHaveFlashLed = (BB_PIN_FLASH_LED >= 0);
+
 void flash(uint8_t duty) {
+  if (!kHaveFlashLed) return;
   ledcWrite(BB_PIN_FLASH_LED, duty);
 }
 
 bool begin() {
   // LEDC on the flash LED so we can dim it. Arduino core 3.x API.
-  ledcAttach(BB_PIN_FLASH_LED, 5000 /*Hz*/, 8 /*bits*/);
-  flash(0);
+  if (kHaveFlashLed) {
+    ledcAttach(BB_PIN_FLASH_LED, 5000 /*Hz*/, 8 /*bits*/);
+    flash(0);
+  } else {
+    Serial.println("[cam] no illuminator - running on ambient light");
+  }
 
   if (!psramFound()) {
     Serial.println("[cam] no PSRAM - check board_build.arduino.memory_type");
@@ -86,7 +93,9 @@ bool begin() {
   s->set_exposure_ctrl(s, 1);
   s->set_aec2(s, 1);
   s->set_gain_ctrl(s, 1);
-  s->set_gainceiling(s, GAINCEILING_4X);  // low ceiling: the LED does the work
+  // With an LED doing the work a low ceiling keeps noise down; without one
+  // the sensor needs the headroom or an enclosed bay comes out black.
+  s->set_gainceiling(s, kHaveFlashLed ? GAINCEILING_4X : GAINCEILING_16X);
   s->set_lenc(s, 1);
   if (s->id.PID == OV3660_PID || s->id.PID == OV5640_PID) {
     s->set_vflip(s, 1);  // these modules are usually mounted upside down
@@ -97,8 +106,10 @@ bool begin() {
 }
 
 camera_fb_t* captureWithFlash() {
-  flash(cfg::kFlashDuty);
-  delay(cfg::kFlashWarmupMs);
+  if (kHaveFlashLed) {
+    flash(cfg::kFlashDuty);
+    delay(cfg::kFlashWarmupMs);  // let AE/AWB settle under the LED
+  }
 
   // Drain the pipeline. Frames already in flight were exposed in the dark.
   for (int i = 0; i < cfg::kThrowawayFrames; ++i) {
