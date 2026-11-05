@@ -18,6 +18,7 @@ host/models/
 data/captures/*
 !data/captures/.gitkeep
 data/dataset/
+data/dataset_qqvga/
 data/telemetry.jsonl
 
 # --- os ---

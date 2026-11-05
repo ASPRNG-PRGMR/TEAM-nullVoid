@@ -7,6 +7,8 @@ anything.**
 Team **nullVoid** · Buildathon 2026 · IEEE Computer Society, MIT Bengaluru ·
 Smart City & Infrastructure
 
+**🥉 3rd place** — built in a **4-hour** buildathon.
+
 ![Internal architecture](binary_bin_cutaway.svg)
 
 ---
@@ -102,6 +104,8 @@ firmware/binary-bin-s3cam/      PlatformIO project for the ESP32-S3
   src/motion.cpp                  axis, servos, homing, interlocks
   src/statemachine.cpp            the five-step cycle
   src/probe.cpp                   "which camera board is this?"
+firmware/shuttle_bench/         Arduino IDE sketch: drive the box and lid by hand
+  shuttle_bench.ino               4 / 6 travel, O / C lid, from the serial monitor
 host/                           the v1 inference host
   serve_wifi.py                   FastAPI /classify + /telemetry
   serve_uart.py                   same classifier over pyserial
@@ -273,6 +277,53 @@ guessed, and each frame lands in `data/dataset/<truth>/` — the layout
 cd host && python tools/bench_test.py
 ```
 
+### 8. Moving the box and the lid by hand
+
+`firmware/shuttle_bench/shuttle_bench.ino` is the Arduino IDE sketch for
+driving the mechanism directly while it is being built — no camera, no
+classifier, no state machine, just the two things that move and a serial
+monitor. It is how you find out whether the belt and the lid work at all,
+before the S3 is allowed anywhere near them. Open the folder in the IDE (the
+sketch and its folder share a name, which the IDE insists on), pick a plain
+**ESP32 dev board**, and talk to it at **115200** with the line ending set to
+**Newline**.
+
+It is a *different board* from the camera module. The driver is wired to GPIO
+18/19/5/23 and the lid servo to 13, which on an ESP32-S3 would be camera data
+lines and USB — do not flash this to the S3.
+
+| key | does |
+|---|---|
+| `4` | travel **left**, 5 s → bin 1, recyclable |
+| `6` | travel **right**, 5 s → bin 2, non-recyclable |
+| `O` | **open** the lid — 1600 µs |
+| `C` | **close** the lid — 1000 µs |
+| `U1600` | raw lid pulse, 1000–2000 µs, for re-measuring those two numbers |
+| `F` / `R` | raw forward / reverse, when you don't care which bin that is |
+| `S` | stop now, and brake |
+| `T5000` | set the travel time, in ms |
+| `P75` | set the motor PWM, 0–255 |
+| `?` | what everything is currently set to |
+
+`4` and `6` are the same two keys as the demo screens in sections 5 and 6 —
+left key, left bin — so the hand that scores an item is the hand that moves
+it. The defaults are five seconds at PWM 75, which is the travel this rail was
+set up for; if the box arrives short, `T` it longer rather than winding the
+duty up, because a belt that slips at speed will not repeat.
+
+The lid numbers belong to this horn: **1600 µs opens it, 1000 µs closes it.**
+Re-cut the linkage and they change — `U` walks the servo so you can find them
+again, and they are the two constants at the top of the file. The sketch sends
+*no* pulse at power-up, so the lid stays where the mechanism left it rather
+than snapping to a position the linkage may not be in; set
+`CLOSE_LID_ON_BOOT = true` to have it take the closed position on boot, once
+the geometry is trusted. And if `4` and `6` send the box to the wrong bins,
+flip `RIGHT_IS_FORWARD` — nothing else needs to change.
+
+Stopping engages the driver's short brake and holds it. A belt-driven box left
+to coast rolls off station, and off station is exactly where a hatch must not
+open.
+
 ## Training on your own bin
 
 ```bash
@@ -322,6 +373,7 @@ routing is auditable from either side.
 | Camera stack on the ESP32-S3 | done, **running on real hardware** |
 | Both transports | done; UART proven on hardware, Wi-Fi compiles only |
 | Motion + interlocks + state machine | done, **dry-run only — nothing wired yet** |
+| Hand-driven bench sketch (shuttle motor + lid servo) | done, section 8 |
 | Host inference + dataset capture | done, **proven end to end** |
 | Fine-tuning pipeline | done |
 | Per-bin fill sensing | v1.5 |
